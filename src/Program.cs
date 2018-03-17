@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Args;
+using Telegram.Bot.Types;
 
 namespace moderately_useful_bot
 {
@@ -36,14 +39,38 @@ namespace moderately_useful_bot
             }
         }
 
-        private static void _onUpdate(object sender, Telegram.Bot.Args.UpdateEventArgs e)
+        private static void _onUpdate(object sender, UpdateEventArgs e)
         {
             var type = e.Update.Type;
             if(type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
             {
                 var message = e.Update.Message;
                 Console.WriteLine("Received Message: " + message.Text);
-                _botClient.SendTextMessageAsync(message.Chat.Id, "You said \"" + message.Text + "\"");
+                if (message.Text.StartsWith('/'))
+                    _reactToCommand(message);
+            }
+        }
+
+        private static void _reactToCommand(Message message)
+        {
+            try
+            {
+                var split = message.Text.Split(' ');
+                var command = split[0];
+                var arguments = split.Skip(1);
+
+                switch (command)
+                {
+                    case "/ping":
+                        _botClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while reacting to command \"" + message.Text + "\": " + ex.ToString());
             }
         }
     }
