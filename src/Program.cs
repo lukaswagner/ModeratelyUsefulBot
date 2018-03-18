@@ -1,4 +1,8 @@
-﻿using System;
+﻿using SpotifyAPI.Web;
+using SpotifyAPI.Web.Auth;
+using SpotifyAPI.Web.Enums;
+using SpotifyAPI.Web.Models;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,9 +15,12 @@ namespace moderately_useful_bot
     class Program
     {
         private static TelegramBotClient _botClient;
+        private static SpotifyWebAPI _spotify;
+        private static ImplicitGrantAuth _spotifyAuth;
 
         private static void Main(string[] args)
         {
+            _setUpSpotify();
             _startBot().Wait();
             Console.WriteLine("Type \"exit\" to stop the bot.");
             var running = true;
@@ -37,6 +44,16 @@ namespace moderately_useful_bot
                 var me = await _botClient.GetMeAsync();
                 Console.WriteLine("Hello! My name is " + me.FirstName);
             }
+        }
+
+        private static void _setUpSpotify()
+        {
+            _spotify = new SpotifyWebAPI()
+            {
+                UseAuth = false,
+            };
+            FullTrack track = _spotify.GetTrack("6lAl0AUvqBHBKMRj2Hh9LP");
+            Console.WriteLine(track.Name);
         }
 
         private static void _onUpdate(object sender, UpdateEventArgs e)
