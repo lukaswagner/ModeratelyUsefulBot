@@ -50,7 +50,9 @@ namespace moderately_useful_bot
         {
             _spotify = new SpotifyWebAPI()
             {
-                UseAuth = false,
+                AccessToken = "/// token ///",
+                TokenType = "Bearer",
+                UseAuth = true
             };
             FullTrack track = _spotify.GetTrack("6lAl0AUvqBHBKMRj2Hh9LP");
             Console.WriteLine(track.Name);

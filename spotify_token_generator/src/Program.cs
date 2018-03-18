@@ -10,7 +10,6 @@ namespace spotify_token_generator
 {
     class Program
     {
-        static SpotifyWebAPI _spotify;
         static ImplicitGrantAuth auth;
 
         static void Main(string[] args)
@@ -26,8 +25,7 @@ namespace spotify_token_generator
                 auth.StartHttpServer();
                 auth.OnResponseReceivedEvent += _callback;
                 auth.DoAuth();
-}
-            
+            }
 
             Console.ReadLine();
         }
