@@ -1,9 +1,6 @@
 ﻿using SpotifyAPI.Web;
-using SpotifyAPI.Web.Auth;
-using SpotifyAPI.Web.Enums;
 using SpotifyAPI.Web.Models;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -16,7 +13,6 @@ namespace moderately_useful_bot
     {
         private static TelegramBotClient _botClient;
         private static SpotifyWebAPI _spotify;
-        private static ImplicitGrantAuth _spotifyAuth;
 
         private static void Main(string[] args)
         {
@@ -34,23 +30,20 @@ namespace moderately_useful_bot
 
         private static async Task _startBot()
         {
-            using (StreamReader sr = new StreamReader("data/token.txt"))
-            {
-                var token = sr.ReadLine();
-                Console.WriteLine("Token: " + token);
-                _botClient = new TelegramBotClient(token);
-                _botClient.OnUpdate += _onUpdate;
-                _botClient.StartReceiving();
-                var me = await _botClient.GetMeAsync();
-                Console.WriteLine("Hello! My name is " + me.FirstName);
-            }
+            var token = Config.GetDefault("telegram/token", "");
+            Console.WriteLine("Token: " + token);
+            _botClient = new TelegramBotClient(token);
+            _botClient.OnUpdate += _onUpdate;
+            _botClient.StartReceiving();
+            var me = await _botClient.GetMeAsync();
+            Console.WriteLine("Hello! My name is " + me.FirstName);
         }
 
         private static void _setUpSpotify()
         {
             _spotify = new SpotifyWebAPI()
             {
-                AccessToken = "/// token ///",
+                AccessToken = Config.GetDefault("spotify/token", ""),
                 TokenType = "Bearer",
                 UseAuth = true
             };
