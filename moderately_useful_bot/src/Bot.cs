@@ -53,6 +53,9 @@ namespace moderately_useful_bot
             {
                 var split = message.Text.Split(' ');
                 var name = split[0];
+                var containsUsername = name.IndexOf('@');
+                if(containsUsername > -1)
+                    name = name.Substring(0, containsUsername);
                 var arguments = split.Skip(1);
 
                 if (!_commands.TryGetValue(name, out Command command))
