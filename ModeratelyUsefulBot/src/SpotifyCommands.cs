@@ -17,6 +17,10 @@ namespace ModeratelyUsefulBot
             public IOrderedEnumerable<PlaylistTrack> Tracks;
             public IEnumerable<IGrouping<string, PlaylistTrack>> GroupedTracks;
             public IDictionary<string, int> Counts;
+            public IOrderedEnumerable<KeyValuePair<string, int>> Durations;
+            public int TotalDuration;
+            public IOrderedEnumerable<KeyValuePair<string, double>> Popularities;
+            public double TotalPopularity;
             public string SnapshotId;
         }
 
@@ -114,7 +118,7 @@ namespace ModeratelyUsefulBot
 
         private static void _loadPlaylist()
         {
-            var playlist = _spotify.GetPlaylist(_userId, _playlistId, /*snapshot_id,*/"tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id)");
+            var playlist = _spotify.GetPlaylist(_userId, _playlistId, /*snapshot_id,*/"tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id,track.duration_ms,track.popularity)");
             var paging = playlist.Tracks;
             var tracks = paging.Items;
             var total = paging.Total;
@@ -155,7 +159,35 @@ namespace ModeratelyUsefulBot
 
         private static string _getFullStats()
         {
-            return "TODO";
+            string result = _getBasicStats();
+
+            if (_cachedPlaylist.Durations == null)
+                _calculateAdditionalStats();
+
+            var millisPerHour = 60 * 60 * 1000;
+            var millisPerMinute = 60 * 1000;
+            result += "\n\nThe playlist's total duration is " + _cachedPlaylist.TotalDuration / millisPerHour + " hours and " + _cachedPlaylist.TotalDuration % millisPerHour / millisPerMinute + " minutes.\n\nHere's who added how much:";
+            foreach (var pair in _cachedPlaylist.Durations)
+                result += "\n" + pair.Key + ": " + pair.Value / millisPerHour + "h" + pair.Value % millisPerHour / millisPerMinute + "m";
+
+            result += "\n\nThe playlist's average popularity score is " + _cachedPlaylist.TotalPopularity.ToString("##0.00") + ".\n\nHere's who added the most popular songs:";
+            foreach (var pair in _cachedPlaylist.Popularities)
+                result += "\n" + pair.Key + ": " + pair.Value.ToString("##0.00");
+
+            return result;
+        }
+
+        private static void _calculateAdditionalStats()
+        {
+            _cachedPlaylist.Durations = _cachedPlaylist.GroupedTracks
+                .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Sum(track => track.Track.DurationMs))
+                .OrderByDescending(pair => pair.Value);
+            _cachedPlaylist.TotalDuration = _cachedPlaylist.Durations.Sum(pair => pair.Value);
+
+            _cachedPlaylist.Popularities = _cachedPlaylist.GroupedTracks
+                .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Average(track => track.Track.Popularity))
+                .OrderByDescending(pair => pair.Value);
+            _cachedPlaylist.TotalPopularity = _cachedPlaylist.Popularities.Average(pair => pair.Value);
         }
     }
 }

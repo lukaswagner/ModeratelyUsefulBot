@@ -66,6 +66,7 @@ namespace ModeratelyUsefulBot
             catch (Exception ex)
             {
                 Console.WriteLine("Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
+                _botClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
         }
     }
