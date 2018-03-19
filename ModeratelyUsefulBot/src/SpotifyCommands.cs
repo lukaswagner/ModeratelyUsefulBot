@@ -12,9 +12,20 @@ namespace ModeratelyUsefulBot
 {
     static class SpotifyCommands
     {
+        private class CachedPlaylist
+        {
+            public IOrderedEnumerable<PlaylistTrack> Tracks;
+            public IEnumerable<IGrouping<string, PlaylistTrack>> GroupedTracks;
+            public IDictionary<string, int> Counts;
+            public string SnapshotId;
+        }
+
         private static SpotifyWebAPI _spotify;
         private static AutorizationCodeAuth _auth;
         private static Token _token;
+        private static CachedPlaylist _cachedPlaylist;
+        private static string _userId;
+        private static string _playlistId;
 
         internal static void SetUpSpotify()
         {
@@ -25,14 +36,26 @@ namespace ModeratelyUsefulBot
                 Scope = Scope.UserReadPrivate,
             };
             _refreshToken();
+
             _spotify = new SpotifyWebAPI()
             {
                 AccessToken = _token.AccessToken,
                 TokenType = _token.TokenType,
                 UseAuth = true
             };
-            FullTrack track = _spotify.GetTrack("6lAl0AUvqBHBKMRj2Hh9LP");
-            Console.WriteLine(track.Name);
+
+            if (Config.Get("spotify/playlist/user", out string user))
+                _userId = user;
+            else
+                Console.WriteLine("Playlist user not specified in config.");
+
+            if (Config.Get("spotify/playlist/id", out string playlist))
+                _playlistId = playlist;
+            else
+                Console.WriteLine("Playlist id not specified in config.");
+
+            if (_userId != null && _playlistId != null)
+                _loadPlaylist();
         }
 
         private static void _refreshToken()
@@ -44,39 +67,95 @@ namespace ModeratelyUsefulBot
 
         internal static void SendPlaylistStats(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
         {
-            if (!Config.Get("spotify/playlist/user", out string user))
+            // check for valid settings
+            if (_userId == null)
             {
                 botClient.SendTextMessageAsync(message.Chat.Id, "Playlist user not specified in config.");
                 return;
             }
 
-            if (!Config.Get("spotify/playlist/id", out string id))
+            if (_playlistId == null)
             {
                 botClient.SendTextMessageAsync(message.Chat.Id, "Playlist id not specified in config.");
                 return;
             }
 
-            if(_token.IsExpired())
+            // refresh token if necessary
+            if (_token.IsExpired())
                 _refreshToken();
 
+            // check for "refresh" argument
+            if(arguments.Count() > 0 && arguments.First().ToLower() == "refresh")
+            {
+                _loadPlaylist();
+                botClient.SendTextMessageAsync(message.Chat.Id, "Ok, I refreshed the playlist.");
+                return;
+            }
+
+            // send placeholder, get playlist and do calculations
             var placeholderMessage = botClient.SendTextMessageAsync(message.Chat.Id, "Crunching the latest data, just for you. Hang tight...");
 
-            var paging = _spotify.GetPlaylistTracks(user, id, "total,next,items(added_by.display_name,added_by.id)");
+            if(_cachedPlaylistOutdated())
+                _loadPlaylist();
+
+            var answer = (arguments.Count() > 0 && arguments.First().ToLower() == "full") ? _getFullStats() : _getBasicStats();
+
+            placeholderMessage.Wait();
+            botClient.EditMessageTextAsync(message.Chat.Id, placeholderMessage.Result.MessageId, answer);
+        }
+
+        private static bool _cachedPlaylistOutdated()
+        {
+            // TODO: use SnapshotId once it is provided by the library
+            return true;
+            //var playlist = _spotify.GetPlaylist(_userId, _playlistId, "snapshot_id");
+            //return playlist.SnapshotId != _cachedPlaylist.SnapshotId;
+        }
+
+        private static void _loadPlaylist()
+        {
+            var playlist = _spotify.GetPlaylist(_userId, _playlistId, /*snapshot_id,*/"tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id)");
+            var paging = playlist.Tracks;
             var tracks = paging.Items;
             var total = paging.Total;
+
             while (paging.HasNextPage())
             {
                 paging = _spotify.GetNextPage(paging);
                 tracks.AddRange(paging.Items);
             }
 
-            var userObj = _spotify.GetPublicProfile(user);
+            _cachedPlaylist = new CachedPlaylist()
+            {
+                Tracks = tracks.OrderBy(t => t.AddedAt),
+                GroupedTracks = tracks.GroupBy(track => track.AddedBy.Id),
+                //SnapshotId = playlist.SnapshotId;
+            };
+        }
 
-            var groupedTracks = tracks.GroupBy(track => track.AddedBy.Id);
-            var counts = groupedTracks.OrderByDescending(group => group.Count()).Select(group => (_spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key) + ": " + group.Count());
+        private static string _getBasicStats()
+        {
+            if (_cachedPlaylist.Counts == null)
+                _calculateBasicStats();
 
-            placeholderMessage.Wait();
-            botClient.EditMessageTextAsync(message.Chat.Id, placeholderMessage.Result.MessageId, String.Join('\n', counts));
+            string result = "The playlist currently contains " + _cachedPlaylist.Tracks.Count() + " songs.\n\nHere's who added how many:";
+
+            foreach(var key in _cachedPlaylist.Counts.Keys)
+                result += "\n" + key + ": " + _cachedPlaylist.Counts[key];
+
+            return result;
+        }
+
+        private static void _calculateBasicStats()
+        {
+            _cachedPlaylist.Counts = _cachedPlaylist.GroupedTracks
+                .OrderByDescending(group => group.Count())
+                .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Count());
+        }
+
+        private static string _getFullStats()
+        {
+            return "TODO";
         }
     }
 }
