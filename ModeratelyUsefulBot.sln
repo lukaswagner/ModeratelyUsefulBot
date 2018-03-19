@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2024
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "moderately_useful_bot", "moderately_useful_bot\moderately_useful_bot.csproj", "{692B3AEB-EC2A-4E54-90A8-05F118C78CFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModeratelyUsefulBot", "ModeratelyUsefulBot\ModeratelyUsefulBot.csproj", "{692B3AEB-EC2A-4E54-90A8-05F118C78CFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spotify_token_generator", "spotify_token_generator\spotify_token_generator.csproj", "{A3762186-F9DF-46FA-976A-1AEE9EB22ED2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpotifyTokenGenerator", "SpotifyTokenGenerator\SpotifyTokenGenerator.csproj", "{A3762186-F9DF-46FA-976A-1AEE9EB22ED2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
