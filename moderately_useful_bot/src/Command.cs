@@ -10,11 +10,11 @@ namespace moderately_useful_bot
     {
         private static List<int> _admins;
 
-        private TelegramBotClient _botClient;
         private Action<TelegramBotClient, Message, IEnumerable<string>> _action;
         private bool _adminOnly;
 
         public string Name { private set; get; }
+        public TelegramBotClient BotClient;
 
         static Command()
         {
@@ -24,9 +24,9 @@ namespace moderately_useful_bot
                 _admins.Add(id);
         }
 
-        public Command(TelegramBotClient botClient, string name, Action<TelegramBotClient, Message, IEnumerable<string>> action, bool adminOnly = false)
+        public Command(string name, Action<TelegramBotClient, Message, IEnumerable<string>> action, TelegramBotClient botClient = null, bool adminOnly = false)
         {
-            _botClient = botClient;
+            BotClient = botClient;
             Name = name;
             _action = action;
             _adminOnly = adminOnly;
@@ -34,13 +34,16 @@ namespace moderately_useful_bot
 
         public void Invoke(Message message, IEnumerable<string> arguments)
         {
+            if (BotClient == null)
+                return;
+
             if(_adminOnly && !_admins.Contains(message.From.Id))
             {
-                _botClient.SendTextMessageAsync(message.Chat.Id, "I don't want to do that.");
+                BotClient.SendTextMessageAsync(message.Chat.Id, "I don't want to do that.");
                 return;
             }
 
-            _action.Invoke(_botClient, message, arguments);
+            _action.Invoke(BotClient, message, arguments);
         }
     }
 }

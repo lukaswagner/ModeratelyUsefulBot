@@ -10,77 +10,44 @@ namespace moderately_useful_bot
 {
     class Program
     {
-        private static TelegramBotClient _botClient;
-        private static Dictionary<string, Command> _commands;
-        private static Command _fallbackCommand;
+        private static Bot _moderatelyUsefulBot;
+        private static Bot _additionalTestBot;
 
         private static void Main(string[] args)
         {
-            _startBot().Wait();
+            SpotifyCommands.SetUpSpotify();
+            _startBot();
             Console.WriteLine("Type \"exit\" to stop the bot.");
             var running = true;
             while(running)
                 if(Console.ReadLine() == "exit")
                 {
-                    _botClient?.StopReceiving();
+                    _moderatelyUsefulBot.StopReceiving();
+                    _additionalTestBot.StopReceiving();
                     running = false;
                 }
         }
 
-        private static async Task _startBot()
+        private static void _startBot()
         {
-            var token = Config.GetDefault("telegram/token", "");
-            _botClient = new TelegramBotClient(token);
+            var token1 = Config.GetDefault("telegram/token[1]", "");
 
-            var commands = new List<Command>()
+            var commands1 = new List<Command>()
             {
-                new Command(_botClient, "/ping", MiscCommands.Ping, true),
-                new Command(_botClient, "/playlist", SpotifyCommands.SendPlaylistStats)
+                new Command("/ping", MiscCommands.Ping, adminOnly: true),
+                new Command("/playlist", SpotifyCommands.SendPlaylistStats)
             };
-            _commands = commands.ToDictionary(cmd => cmd.Name, cmd => cmd);
-            _fallbackCommand = new Command(_botClient, "", _unknownCommand);
 
-            _botClient.OnUpdate += _onUpdate;
-            _botClient.StartReceiving();
+            _moderatelyUsefulBot = new Bot(token1, commands1, "Sorry, but I don't know how to do that. I'm just moderately useful, after all.");
 
-            var me = await _botClient.GetMeAsync();
-            Console.WriteLine("Hello! My name is " + me.FirstName);
-        }
+            var token2 = Config.GetDefault("telegram/token[2]", "");
 
-        private static void _onUpdate(object sender, UpdateEventArgs e)
-        {
-            var type = e.Update.Type;
-            if(type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
+            var commands2 = new List<Command>()
             {
-                var message = e.Update.Message;
-                Console.WriteLine("Received Message: " + message.Text);
-                if (message.Text.StartsWith('/'))
-                    _reactToCommand(message);
-            }
-        }
+                new Command("/ping", MiscCommands.Ping)
+            };
 
-        private static void _reactToCommand(Message message)
-        {
-            try
-            {
-                var split = message.Text.Split(' ');
-                var name = split[0];
-                var arguments = split.Skip(1);
-
-                if (!_commands.TryGetValue(name, out Command command))
-                    command = _fallbackCommand;
-
-                command.Invoke(message, arguments);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
-            }
-        }
-
-        private static void _unknownCommand(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
-        {
-            botClient.SendTextMessageAsync(message.Chat.Id, "Sorry, but I don't know how to do that.");
+            _additionalTestBot = new Bot(token2, commands2);
         }
     }
 }

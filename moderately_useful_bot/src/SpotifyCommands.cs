@@ -12,7 +12,7 @@ namespace moderately_useful_bot
     {
         private static SpotifyWebAPI _spotify;
 
-        static SpotifyCommands()
+        internal static void SetUpSpotify()
         {
             _spotify = new SpotifyWebAPI()
             {
