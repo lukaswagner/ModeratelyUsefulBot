@@ -6,35 +6,39 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace SpotifyTokenGenerator≥
+namespace SpotifyTokenGenerator
 {
     class Program
     {
-        static ImplicitGrantAuth auth;
+        private static AutorizationCodeAuth _auth;
+        private static string _clientSecret;
 
         static void Main(string[] args)
         {
-            using (StreamReader sr = new StreamReader("data/clientId.txt"))
+            using (StreamReader sr = new StreamReader("data/clientData.txt"))
             {
-                auth = new ImplicitGrantAuth()
+                _auth = new AutorizationCodeAuth()
                 {
                     ClientId = sr.ReadLine(),
                     RedirectUri = "http://localhost",
                     Scope = Scope.UserReadPrivate,
                 };
-                auth.StartHttpServer();
-                auth.OnResponseReceivedEvent += _callback;
-                auth.DoAuth();
+                _auth.StartHttpServer();
+                _clientSecret = sr.ReadLine();
+                _auth.OnResponseReceivedEvent += _callback;
+                _auth.DoAuth();
             }
 
             Console.ReadLine();
         }
 
-        static void _callback(Token token, string state)
+        static void _callback(AutorizationCodeAuthResponse response)
         {
-            Console.WriteLine(token.AccessToken);
+            Token token = _auth.ExchangeAuthCode(response.Code, _clientSecret);
 
-            auth.StopHttpServer();
+            Console.WriteLine(token.RefreshToken);
+
+            _auth.StopHttpServer();
         }
     }
 }

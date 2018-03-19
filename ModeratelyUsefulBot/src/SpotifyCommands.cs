@@ -1,4 +1,6 @@
 ﻿using SpotifyAPI.Web;
+using SpotifyAPI.Web.Auth;
+using SpotifyAPI.Web.Enums;
 using SpotifyAPI.Web.Models;
 using System;
 using System.Collections.Generic;
@@ -11,17 +13,33 @@ namespace ModeratelyUsefulBot
     static class SpotifyCommands
     {
         private static SpotifyWebAPI _spotify;
+        private static AutorizationCodeAuth _auth;
+        private static Token _token;
 
         internal static void SetUpSpotify()
         {
+            _auth = new AutorizationCodeAuth()
+            {
+                ClientId = Config.GetDefault("spotify/auth/clientId", ""),
+                RedirectUri = "http://localhost",
+                Scope = Scope.UserReadPrivate,
+            };
+            _refreshToken();
             _spotify = new SpotifyWebAPI()
             {
-                AccessToken = Config.GetDefault("spotify/token", ""),
-                TokenType = "Bearer",
+                AccessToken = _token.AccessToken,
+                TokenType = _token.TokenType,
                 UseAuth = true
             };
             FullTrack track = _spotify.GetTrack("6lAl0AUvqBHBKMRj2Hh9LP");
             Console.WriteLine(track.Name);
+        }
+
+        private static void _refreshToken()
+        {
+            _token = _auth.RefreshToken(Config.GetDefault("spotify/auth/refreshToken", ""), Config.GetDefault("spotify/auth/clientSecret", ""));
+            if(_spotify != null)
+                _spotify.AccessToken = _token.AccessToken;
         }
 
         internal static void SendPlaylistStats(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
@@ -37,6 +55,9 @@ namespace ModeratelyUsefulBot
                 botClient.SendTextMessageAsync(message.Chat.Id, "Playlist id not specified in config.");
                 return;
             }
+
+            if(_token.IsExpired())
+                _refreshToken();
 
             var placeholderMessage = botClient.SendTextMessageAsync(message.Chat.Id, "Crunching the latest data, just for you. Hang tight...");
 
