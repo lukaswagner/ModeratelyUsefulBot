@@ -110,15 +110,13 @@ namespace ModeratelyUsefulBot
 
         private static bool _cachedPlaylistOutdated()
         {
-            // TODO: use SnapshotId once it is provided by the library
-            return true;
-            //var playlist = _spotify.GetPlaylist(_userId, _playlistId, "snapshot_id");
-            //return playlist.SnapshotId != _cachedPlaylist.SnapshotId;
+            var playlist = _spotify.GetPlaylist(_userId, _playlistId, "snapshot_id");
+            return playlist.SnapshotId != _cachedPlaylist.SnapshotId;
         }
 
         private static void _loadPlaylist()
         {
-            var playlist = _spotify.GetPlaylist(_userId, _playlistId, /*snapshot_id,*/"tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id,track.duration_ms,track.popularity)");
+            var playlist = _spotify.GetPlaylist(_userId, _playlistId, "snapshot_id,tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id,track.duration_ms,track.popularity)");
             var paging = playlist.Tracks;
             var tracks = paging.Items;
             var total = paging.Total;
@@ -133,7 +131,7 @@ namespace ModeratelyUsefulBot
             {
                 Tracks = tracks.OrderBy(t => t.AddedAt),
                 GroupedTracks = tracks.GroupBy(track => track.AddedBy.Id),
-                //SnapshotId = playlist.SnapshotId;
+                SnapshotId = playlist.SnapshotId
             };
         }
 
