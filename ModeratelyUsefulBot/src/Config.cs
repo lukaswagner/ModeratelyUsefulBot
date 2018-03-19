@@ -14,6 +14,8 @@ namespace ModeratelyUsefulBot
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static Config() => _doc.Load("data/config.xml");
 
+        public static bool DoesPropertyExist(string property) => _doc.SelectSingleNode("/config/" + property) != null;
+
         public static bool Get<T>(string property, out T value)
         {
             value = default(T);

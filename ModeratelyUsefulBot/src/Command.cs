@@ -20,8 +20,8 @@ namespace ModeratelyUsefulBot
         {
             _admins = new List<int>();
             var index = 1;
-            while(Config.Get("telegram/admins/id[" + index++ + "]", out int id))
-                _admins.Add(id);
+            while(Config.DoesPropertyExist("telegram/admins/id[" + index + "]"))
+                _admins.Add(Config.GetDefault("telegram/admins/id[" + index++ + "]", 0));
         }
 
         public Command(string name, Action<TelegramBotClient, Message, IEnumerable<string>> action, TelegramBotClient botClient = null, bool adminOnly = false)
