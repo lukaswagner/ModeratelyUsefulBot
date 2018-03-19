@@ -6,7 +6,7 @@ using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 
-namespace moderately_useful_bot
+namespace ModeratelyUsefulBot
 {
     class Program
     {

@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace spotify_token_generator
+namespace SpotifyTokenGenerator≥
 {
     class Program
     {

@@ -5,7 +5,7 @@ using System.Security;
 using System.Text;
 using System.Xml;
 
-namespace moderately_useful_bot
+namespace ModeratelyUsefulBot
 {
     internal static class Config
     {

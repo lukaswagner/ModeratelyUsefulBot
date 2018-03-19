@@ -1,1 +1,1 @@
-moderately_useful_bot
+ModeratelyUsefulBot

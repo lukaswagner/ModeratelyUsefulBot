@@ -4,7 +4,7 @@ using System.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace moderately_useful_bot
+namespace ModeratelyUsefulBot
 {
     static class MiscCommands
     {
