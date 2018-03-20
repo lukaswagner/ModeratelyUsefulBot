@@ -52,7 +52,7 @@ namespace ModeratelyUsefulBot
             try
             {
                 var split = message.Text.Split(' ');
-                var name = split[0];
+                var name = split[0].ToLower();
                 var containsUsername = name.IndexOf('@');
                 if(containsUsername > -1)
                     name = name.Substring(0, containsUsername);
