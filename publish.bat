@@ -32,10 +32,13 @@ rem // copy second layer of files
 echo mkdir data >> temp\psftp.bat
 echo cd data >> temp\psftp.bat
 echo mput publish/data/* >> temp\psftp.bat
+rem // change permissions - make target runnable
+echo cd .. >> temp\psftp.bat
+echo chmod 755 ./%target% >> temp\psftp.bat
 rem // exit psftp
 echo quit >> temp\psftp.bat
 rem // run psftp with previously stored commands
-psftp "%~1" -bc -be -b temp\psftp.bat -l "%~2" -pw "%~3"
+psftp "%~1" -be -b temp\psftp.bat -l "%~2" -pw "%~3"
 rem // clean up
 del temp\* /q
 rmdir temp
