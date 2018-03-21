@@ -13,13 +13,16 @@ namespace ModeratelyUsefulBot
         private TelegramBotClient _botClient;
         private Dictionary<string, Command> _commands;
         private Command _fallbackCommand;
+        private List<int> _admins;
 
-        internal Bot(string token, List<Command> commands, string fallbackMessage = "Sorry, but I don't know how to do that.")
+        internal Bot(string token, List<Command> commands, List<int> admins, string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
             _botClient = new TelegramBotClient(token);
             
             _commands = commands.ToDictionary(cmd => cmd.Name, cmd => { cmd.BotClient = _botClient; return cmd; });
             _fallbackCommand = new Command("", (c, m, a) => c.SendTextMessageAsync(m.Chat.Id, fallbackMessage), _botClient);
+
+            _admins = admins;
 
             _botClient.OnUpdate += _onUpdate;
             _botClient.StartReceiving();
@@ -44,6 +47,14 @@ namespace ModeratelyUsefulBot
             string fallbackMessage = "";
             if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);
 
+            var admins = new List<int>();
+            if(Config.DoesPropertyExist(path + "/admins"))
+            {
+                var adminIndex = 1;
+                while (Config.DoesPropertyExist(path + "/admins/admin[" + adminIndex + "]"))
+                    admins.Add(Config.GetDefault(path + "/admins/admin[" + adminIndex++ + "]", 0));
+            }
+
             var commands = new List<Command>();
             var commandIndex = 1;
             while (Config.DoesPropertyExist(path + "/commands/command[" + commandIndex + "]"))
@@ -54,9 +65,9 @@ namespace ModeratelyUsefulBot
             }
 
             if(hasCustomFallbackMessage)
-                return new Bot(token, commands, fallbackMessage);
+                return new Bot(token, commands, admins, fallbackMessage);
             else
-                return new Bot(token, commands);
+                return new Bot(token, commands, admins);
         }
 
         internal void StopReceiving() => _botClient?.StopReceiving();
@@ -92,6 +103,12 @@ namespace ModeratelyUsefulBot
 
                 if (!_commands.TryGetValue(name, out Command command))
                     command = _fallbackCommand;
+
+                if (command.AdminOnly && !_admins.Contains(message.From.Id))
+                {
+                    _botClient.SendTextMessageAsync(message.Chat.Id, "Don't tell me what to do!");
+                    return;
+                }
 
                 command.Invoke(message, arguments);
             }

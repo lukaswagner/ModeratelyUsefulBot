@@ -9,28 +9,18 @@ namespace ModeratelyUsefulBot
 {
     class Command
     {
-        private static List<int> _admins;
-
         private Action<TelegramBotClient, Message, IEnumerable<string>> _action;
-        private bool _adminOnly;
 
         public string Name { private set; get; }
         public TelegramBotClient BotClient;
-
-        static Command()
-        {
-            _admins = new List<int>();
-            var index = 1;
-            while(Config.DoesPropertyExist("telegram/admins/id[" + index + "]"))
-                _admins.Add(Config.GetDefault("telegram/admins/id[" + index++ + "]", 0));
-        }
+        public bool AdminOnly;
 
         public Command(string name, Action<TelegramBotClient, Message, IEnumerable<string>> action, TelegramBotClient botClient = null, bool adminOnly = false)
         {
             BotClient = botClient;
             Name = name;
             _action = action;
-            _adminOnly = adminOnly;
+            AdminOnly = adminOnly;
         }
 
         internal static Command CreateCommand(string botPath, int index)
@@ -64,12 +54,6 @@ namespace ModeratelyUsefulBot
         {
             if (BotClient == null)
                 return;
-
-            if(_adminOnly && !_admins.Contains(message.From.Id))
-            {
-                BotClient.SendTextMessageAsync(message.Chat.Id, "I don't want to do that.");
-                return;
-            }
 
             _action.Invoke(BotClient, message, arguments);
         }
