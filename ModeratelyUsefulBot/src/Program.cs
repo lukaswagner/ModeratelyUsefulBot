@@ -10,8 +10,7 @@ namespace ModeratelyUsefulBot
 {
     class Program
     {
-        private static Bot _moderatelyUsefulBot;
-        private static Bot _additionalTestBot;
+        private static List<Bot> _bots;
 
         private static void Main(string[] args)
         {
@@ -22,32 +21,22 @@ namespace ModeratelyUsefulBot
             while(running)
                 if(Console.ReadLine() == "exit")
                 {
-                    _moderatelyUsefulBot.StopReceiving();
-                    _additionalTestBot.StopReceiving();
+                    foreach (var bot in _bots)
+                        bot.StopReceiving();
                     running = false;
                 }
         }
 
         private static void _startBot()
         {
-            var token1 = Config.GetDefault("telegram/token[1]", "");
-
-            var commands1 = new List<Command>()
+            _bots = new List<Bot>();
+            var botIndex = 1;
+            while (Config.DoesPropertyExist("bots/bot[" + botIndex + "]"))
             {
-                new Command("/ping", MiscCommands.Ping, adminOnly: true),
-                new Command("/playlist", SpotifyCommands.SendPlaylistStats)
-            };
-
-            _moderatelyUsefulBot = new Bot(token1, commands1, "Sorry, but I don't know how to do that. I'm just moderately useful, after all.");
-
-            var token2 = Config.GetDefault("telegram/token[2]", "");
-
-            var commands2 = new List<Command>()
-            {
-                new Command("/ping", MiscCommands.Ping)
-            };
-
-            _additionalTestBot = new Bot(token2, commands2);
+                var bot = Bot.CreateBot(botIndex++);
+                if (bot != null)
+                    _bots.Add(bot);
+            }
         }
     }
 }

@@ -53,10 +53,10 @@ namespace ModeratelyUsefulBot
 
         public static T GetDefault<T>(string property, T defaultValue)
         {
-            if (Get<T>(property, out var outValue))
-                return outValue;
-            else
+            if (!DoesPropertyExist(property))
                 return defaultValue;
+            Get<T>(property, out var outValue);
+            return outValue;
         }
 
         public static bool Set(string property, object value)

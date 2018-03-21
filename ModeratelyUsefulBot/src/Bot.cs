@@ -27,6 +27,38 @@ namespace ModeratelyUsefulBot
             _check();
         }
 
+        internal static Bot CreateBot(int index)
+        {
+            var path = "bots/bot[" + index + "]";
+
+            bool checkArg(bool success, string message)
+            {
+                if (!success)
+                    Console.WriteLine("Could not create bot with index " + index + ". " + message);
+                return success;
+            }
+
+            if (!checkArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
+            if(!checkArg(Config.Get(path + "/token", out string token), "No token found in config.")) return null;
+            var hasCustomFallbackMessage = Config.DoesPropertyExist(path + "/fallbackMessage");
+            string fallbackMessage = "";
+            if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);
+
+            var commands = new List<Command>();
+            var commandIndex = 1;
+            while (Config.DoesPropertyExist(path + "/commands/command[" + commandIndex + "]"))
+            {
+                var command = Command.CreateCommand(path, commandIndex++);
+                if(command != null)
+                    commands.Add(command);
+            }
+
+            if(hasCustomFallbackMessage)
+                return new Bot(token, commands, fallbackMessage);
+            else
+                return new Bot(token, commands);
+        }
+
         internal void StopReceiving() => _botClient?.StopReceiving();
 
         private async void _check()
