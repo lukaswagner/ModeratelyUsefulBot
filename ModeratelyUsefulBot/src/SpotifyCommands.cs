@@ -31,7 +31,7 @@ namespace ModeratelyUsefulBot
         private static string _userId;
         private static string _playlistId;
 
-        internal static void SetUpSpotify()
+        static SpotifyCommands()
         {
             _auth = new AutorizationCodeAuth()
             {
@@ -60,6 +60,8 @@ namespace ModeratelyUsefulBot
 
             if (_userId != null && _playlistId != null)
                 _loadPlaylist();
+
+            Console.WriteLine("Spotify setup done.");
         }
 
         private static void _refreshToken()

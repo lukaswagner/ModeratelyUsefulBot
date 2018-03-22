@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -43,6 +44,7 @@ namespace ModeratelyUsefulBot
             if(!checkArg(splitAction.Length == 2, "Action should contain class and method name divided by a period.")) return null;
             var actionClass = Type.GetType("ModeratelyUsefulBot." + splitAction[0]);
             if (!checkArg(actionClass != null, "Could not find class " + splitAction[0] + ".")) return null;
+            RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);
             var actionMethod = actionClass.GetMethod(splitAction[1], BindingFlags.Static | BindingFlags.NonPublic);
             if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
             var action = (Action<TelegramBotClient, Message, IEnumerable<string>>)Delegate.CreateDelegate(typeof(Action<TelegramBotClient, Message, IEnumerable<string>>), actionMethod);

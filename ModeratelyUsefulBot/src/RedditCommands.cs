@@ -15,7 +15,7 @@ namespace ModeratelyUsefulBot
         private static int _postOffset;
         private static Random _random = new Random();
 
-        internal static void SetUpReddit()
+        static RedditCommands()
         {
             var webAgent = new BotWebAgent(
                 Config.GetDefault("reddit/auth/username", ""),
@@ -31,6 +31,8 @@ namespace ModeratelyUsefulBot
             while (posts.MoveNext() && posts.Current.IsStickied)
                 offset++;
             _postOffset = offset;
+
+            Console.WriteLine("Reddit setup done.");
         }
 
         internal static void GetRandomMeme(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
