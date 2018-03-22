@@ -15,6 +15,7 @@ namespace ModeratelyUsefulBot
         private static void Main(string[] args)
         {
             SpotifyCommands.SetUpSpotify();
+            RedditCommands.SetUpReddit();
             _startBot();
             Console.WriteLine("Type \"exit\" to stop the bot.");
             var running = true;
