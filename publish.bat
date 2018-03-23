@@ -5,15 +5,19 @@ if "%~1"=="" (
     exit
 )
 if "%~2"=="" (
-    echo Please provide a username for authentification.
+    echo Please provide a port.
     exit
 )
 if "%~3"=="" (
+    echo Please provide a username for authentification.
+    exit
+)
+if "%~4"=="" (
     echo Please provide a password for authentification.
     exit
 )
 set target=ModeratelyUsefulBot
-if not "%~4"=="" set target=%~4
+if not "%~5"=="" set target=%~5
 rem // publish project
 cd %target%
 dotnet publish -r linux-arm -c "Release"
@@ -38,7 +42,7 @@ echo chmod 755 ./%target% >> temp\psftp.bat
 rem // exit psftp
 echo quit >> temp\psftp.bat
 rem // run psftp with previously stored commands
-psftp "%~1" -be -b temp\psftp.bat -l "%~2" -pw "%~3"
+psftp "%~1" -P "%~2" -be -b temp\psftp.bat -l "%~3" -pw "%~4"
 rem // clean up
 del temp\* /q
 rmdir temp
