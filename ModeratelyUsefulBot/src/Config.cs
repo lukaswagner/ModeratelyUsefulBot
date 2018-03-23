@@ -9,6 +9,7 @@ namespace ModeratelyUsefulBot
 {
     internal static class Config
     {
+        private static string _tag = "Config";
         private static XmlDocument _doc = new XmlDocument();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
@@ -25,7 +26,7 @@ namespace ModeratelyUsefulBot
 
             if (node == null)
             {
-                Console.WriteLine("Config: Tried to read property which doesn't exist: " + property);
+                Log.Warn(_tag, "Tried to read property which doesn't exist: " + property);
                 return false;
             }
 
@@ -43,7 +44,7 @@ namespace ModeratelyUsefulBot
                     || ex is OverflowException
                     || ex is ArgumentNullException)
                 {
-                    Console.WriteLine("Config: Could not convert property " + property + " with value " + valueString + " to type " + typeof(T).Name + ".");
+                    Log.Error(_tag, "Could not convert property " + property + " with value " + valueString + " to type " + typeof(T).Name + ".");
                     return false;
                 }
 
@@ -82,7 +83,7 @@ namespace ModeratelyUsefulBot
                     || ex is NotSupportedException
                     || ex is SecurityException)
                 {
-                    Console.WriteLine("Config: Could not set property " + property + ":\n" + ex.Message);
+                    Log.Error(_tag, "Could not set property " + property + ":\n" + ex.Message);
                     return false;
                 }
 

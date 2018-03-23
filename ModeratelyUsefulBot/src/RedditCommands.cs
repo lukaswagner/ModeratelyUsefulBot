@@ -10,6 +10,7 @@ namespace ModeratelyUsefulBot
 {
     static class RedditCommands
     {
+        private static string _tag = "Reddit";
         private static Reddit _reddit;
         private static Subreddit _dankmemes;
         private static int _postOffset;
@@ -32,7 +33,7 @@ namespace ModeratelyUsefulBot
                 offset++;
             _postOffset = offset;
 
-            Console.WriteLine("Reddit setup done.");
+            Log.Info(_tag, "Reddit API setup done.");
         }
 
         internal static void GetRandomMeme(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)

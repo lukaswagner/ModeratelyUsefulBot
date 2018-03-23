@@ -10,6 +10,7 @@ namespace ModeratelyUsefulBot
 {
     class Bot
     {
+        private static string _tag = "Bot";
         private TelegramBotClient _botClient;
         private Dictionary<string, Command> _commands;
         private Command _fallbackCommand;
@@ -37,7 +38,7 @@ namespace ModeratelyUsefulBot
             bool checkArg(bool success, string message)
             {
                 if (!success)
-                    Console.WriteLine("Could not create bot with index " + index + ". " + message);
+                    Log.Error(_tag, "Could not create bot with index " + index + ". " + message);
                 return success;
             }
 
@@ -75,7 +76,7 @@ namespace ModeratelyUsefulBot
         private async void _check()
         {
             var me = await _botClient.GetMeAsync();
-            Console.WriteLine("Hello! My name is " + me.FirstName);
+            Log.Info(_tag, "Hello! My name is " + me.FirstName + ".");
         }
 
         private void _onUpdate(object sender, UpdateEventArgs e)
@@ -84,7 +85,7 @@ namespace ModeratelyUsefulBot
             if (type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
             {
                 var message = e.Update.Message;
-                Console.WriteLine("Received Message: " + message.Text);
+                Log.Info(_tag, "Received Message: " + message.Text);
                 if (message.Text.StartsWith('/'))
                     _reactToCommand(message);
             }
@@ -114,7 +115,7 @@ namespace ModeratelyUsefulBot
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
+                Log.Error(_tag, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
                 _botClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
         }

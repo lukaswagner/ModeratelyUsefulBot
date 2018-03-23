@@ -24,6 +24,7 @@ namespace ModeratelyUsefulBot
             public string SnapshotId;
         }
 
+        private static string _tag = "Spotify";
         private static SpotifyWebAPI _spotify;
         private static AutorizationCodeAuth _auth;
         private static Token _token;
@@ -51,17 +52,17 @@ namespace ModeratelyUsefulBot
             if (Config.Get("spotify/playlist/user", out string user))
                 _userId = user;
             else
-                Console.WriteLine("Playlist user not specified in config.");
+                Log.Error(_tag, "Playlist user not specified in config.");
 
             if (Config.Get("spotify/playlist/id", out string playlist))
                 _playlistId = playlist;
             else
-                Console.WriteLine("Playlist id not specified in config.");
+                Log.Error(_tag, "Playlist id not specified in config.");
 
             if (_userId != null && _playlistId != null)
                 _loadPlaylist();
 
-            Console.WriteLine("Spotify setup done.");
+            Log.Info(_tag, "Spotify API setup done.");
         }
 
         private static void _refreshToken()

@@ -12,6 +12,7 @@ namespace ModeratelyUsefulBot
     {
         private Action<TelegramBotClient, Message, IEnumerable<string>> _action;
 
+        private static string _tag = "Command";
         public string Name { private set; get; }
         public TelegramBotClient BotClient;
         public bool AdminOnly;
@@ -30,8 +31,8 @@ namespace ModeratelyUsefulBot
 
             bool checkArg(bool success, string message)
             {
-                if(!success)
-                    Console.WriteLine("Could not create command with botPath " + botPath + " and index " + index + ". " + message);
+                if (!success)
+                    Log.Error(_tag, "Could not create command with botPath " + botPath + " and index " + index + ". " + message);
                 return success;
             }
 
