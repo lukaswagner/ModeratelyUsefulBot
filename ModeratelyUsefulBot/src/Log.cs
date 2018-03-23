@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -34,6 +35,12 @@ namespace ModeratelyUsefulBot
                 }
                 Console.WriteLine(_getLogLevelString(LogLevel) + " " + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message);
                 Console.ResetColor();
+            }
+
+            public void LogToFile(StreamWriter writer)
+            {
+                writer.WriteLine(_getLogLevelString(LogLevel) + " " + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message);
+                writer.Flush();
             }
 
             private static string _getLogLevelString(LogLevel logLevel)
@@ -78,6 +85,8 @@ namespace ModeratelyUsefulBot
         private static bool _runLogLoop = true;
         private static object _logLoopLock = new object();
         private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private static LogLevel _consoleLevel = LogLevel.Off;
+        private static LogLevel _fileLevel = LogLevel.Off;
         private static LogLevel _level = LogLevel.Off;
         public static int TagLength = 15;
 
@@ -86,6 +95,20 @@ namespace ModeratelyUsefulBot
         private static void _logLoop()
         {
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
+            LogEntry entry;
+
+            StreamWriter writer = null;
+            if (_fileLevel < LogLevel.Off)
+            {
+                var filePath = "log/log_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".txt";
+                var fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Directory.Exists)
+                {
+                    System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
+                }
+                writer = new StreamWriter(filePath);
+            }
+
             try
             {
                 while (true)
@@ -97,12 +120,26 @@ namespace ModeratelyUsefulBot
                             return;
                         }
                     }
-                    _queue.Take(cancellationToken).LogToConsole();
+                    entry = _queue.Take(cancellationToken);
+                    if (entry.LogLevel >= _consoleLevel)
+                        entry.LogToConsole();
+                    if (entry.LogLevel >= _fileLevel)
+                        entry.LogToFile(writer);
                 }
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
-                (new LogEntry(LogLevel.Info, _tag, "Stopped output.")).LogToConsole();
+                entry = new LogEntry(LogLevel.Info, _tag, "Stopped output.");
+                if (entry.LogLevel >= _consoleLevel)
+                    entry.LogToConsole();
+                if (entry.LogLevel >= _fileLevel)
+                    entry.LogToFile(writer);
+            }
+
+            if (writer != null)
+            {
+                writer.Close();
+                writer.Dispose();
             }
         }
 
@@ -112,33 +149,51 @@ namespace ModeratelyUsefulBot
                 _queue.Add(new LogEntry(logLevel, tag, message));
         }
 
-        public static void Enable(LogLevel logLevel)
+        public static void Enable(LogLevel consoleLevel, LogLevel fileLevel)
         {
-            _level = logLevel;
-            if (!_logLoopThread.IsAlive && logLevel < LogLevel.Off)
+            _consoleLevel = consoleLevel;
+            _fileLevel = fileLevel;
+            _level = fileLevel < consoleLevel ? fileLevel : consoleLevel;
+            if (!_logLoopThread.IsAlive && _level < LogLevel.Off)
             {
                 _logLoopThread.Start();
                 AppDomain.CurrentDomain.ProcessExit += _exitHandler;
             }
         }
 
-        public static void Enable(string logLevelString)
+        public static void Enable(string consoleLevelString, string fileLevelString = "Off")
         {
-            LogLevel logLevel;
+            LogLevel consoleLevel;
             try
             {
-                logLevel = (LogLevel)System.Enum.Parse(typeof(LogLevel), logLevelString);
+                consoleLevel = (LogLevel)System.Enum.Parse(typeof(LogLevel), consoleLevelString);
             }
             catch (Exception ex)
             {
                 if (ex is ArgumentNullException
                     || ex is ArgumentException
                     || ex is OverflowException)
-                    logLevel = LogLevel.Info;
+                    consoleLevel = LogLevel.Info;
                 else
                     throw;
             }
-            Enable(logLevel);
+
+            LogLevel fileLevel;
+            try
+            {
+                fileLevel = (LogLevel)System.Enum.Parse(typeof(LogLevel), fileLevelString);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ArgumentNullException
+                    || ex is ArgumentException
+                    || ex is OverflowException)
+                    fileLevel = LogLevel.Info;
+                else
+                    throw;
+            }
+
+            Enable(consoleLevel, fileLevel);
         }
 
         public static void Disable()

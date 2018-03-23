@@ -55,7 +55,10 @@ namespace ModeratelyUsefulBot
         public static T GetDefault<T>(string property, T defaultValue)
         {
             if (!DoesPropertyExist(property))
+            {
+                Log.Info(_tag, "Could not find property " + property + ". Using default value (" + defaultValue.ToString() + ").");
                 return defaultValue;
+            }
             Get<T>(property, out var outValue);
             return outValue;
         }

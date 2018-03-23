@@ -15,7 +15,7 @@ namespace ModeratelyUsefulBot
 
         private static void Main(string[] args)
         {
-            Log.Enable(Config.GetDefault("log/level", "Info"));
+            Log.Enable(Config.GetDefault("log/consoleLevel", "Info"), Config.GetDefault("log/fileLevel", "Off"));
             _startBots();
             Log.Info(_tag, "Type \"exit\" to stop the bot.");
             var running = true;
