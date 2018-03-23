@@ -10,10 +10,15 @@ namespace ModeratelyUsefulBot
     internal static class Config
     {
         private static string _tag = "Config";
+#if DEBUG
+        private static string _file = "data/debugConfig.xml";
+#else
+        private static string _file = "data/config.xml";
+#endif
         private static XmlDocument _doc = new XmlDocument();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
-        static Config() => _doc.Load("data/config.xml");
+        static Config() => _doc.Load(_file);
 
         public static bool DoesPropertyExist(string property) => _doc.SelectSingleNode("/config/" + property) != null;
 
