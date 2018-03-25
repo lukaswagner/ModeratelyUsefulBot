@@ -8,16 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="RedditSharp" Version="1.1.14" />
+    <PackageReference Include="SpotifyAPI-NET" Version="2.18.0" />
     <PackageReference Include="Telegram.Bot" Version="13.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\SpotifyAPI-NET\SpotifyAPI\bin\Release\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="SpotifyAPI">
-      <HintPath>..\..\SpotifyAPI-NET\SpotifyAPI\bin\Release\SpotifyAPI.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
