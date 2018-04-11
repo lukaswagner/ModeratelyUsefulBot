@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -26,6 +27,20 @@ namespace ModeratelyUsefulBot
                 using (var fs = new FileStream(Log.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var sr = new StreamReader(fs))
                     botClient.SendTextMessageAsync(message.Chat.Id, "Current log file (" + Log.FilePath.Replace("_", "\\_") + "):\n```\n" + sr.ReadToEnd() + "\n```", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+            }
+        }
+
+        internal static void Exit(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        {
+            if(arguments.Count() > 0 && int.TryParse(arguments.First(), out int secondsUntilExit))
+            {
+                botClient.SendTextMessageAsync(message.Chat.Id, "Shutting down in " + secondsUntilExit + " seconds.");
+                Program.Exit(secondsUntilExit);
+            }
+            else
+            {
+                botClient.SendTextMessageAsync(message.Chat.Id, "Shutting down in " + ((Action<int>)Program.Exit).Method.GetParameters().First().DefaultValue + " seconds.");
+                Program.Exit();
             }
         }
     }
