@@ -92,7 +92,7 @@ namespace ModeratelyUsefulBot
         private static LogLevel _fileLevel = LogLevel.Off;
         private static LogLevel _level = LogLevel.Off;
         public static int TagLength = 15;
-        public static bool LogTimes = true;
+        public static bool LogTimes = Config.GetDefault("log/logTimes", true);
 
         private static void _exitHandler(object sender, EventArgs e) => Disable();
 
