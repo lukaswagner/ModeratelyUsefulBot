@@ -98,6 +98,7 @@ namespace ModeratelyUsefulBot
         private static LogLevel _level = LogLevel.Off;
         public static int TagLength = 15;
         public static bool LogTimes = Config.GetDefault("log/logTimes", true);
+        public static string FilePath { get; private set; }
 
         private static void _exitHandler(object sender, EventArgs e) => Disable();
 
@@ -106,16 +107,18 @@ namespace ModeratelyUsefulBot
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
             LogEntry entry;
 
+            FileStream fileStream = null;
             StreamWriter writer = null;
             if (_fileLevel < LogLevel.Off)
             {
-                var filePath = "log/log_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".txt";
-                var fileInfo = new FileInfo(filePath);
+                FilePath = "log/log_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".txt";
+                var fileInfo = new FileInfo(FilePath);
                 if (!fileInfo.Directory.Exists)
                 {
                     System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
                 }
-                writer = new StreamWriter(filePath);
+                fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+                writer = new StreamWriter(fileStream);
             }
 
             try
@@ -149,6 +152,11 @@ namespace ModeratelyUsefulBot
             {
                 writer.Close();
                 writer.Dispose();
+            }
+            if(fileStream != null)
+            {
+                fileStream.Close();
+                fileStream.Dispose();
             }
         }
 
