@@ -20,7 +20,8 @@ namespace ModeratelyUsefulBot
             Log.Enable(Config.GetDefault("log/consoleLevel", "Info"), Config.GetDefault("log/fileLevel", "Off"));
             _startBots();
             var now = DateTime.Now;
-            _timer = new Timer(_runTimedCommands, null, (new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute + 1, 0)) - now, TimeSpan.FromMinutes(1));
+            var minute = now.Minute + 1;
+            _timer = new Timer(_runTimedCommands, null, (new DateTime(now.Year, now.Month, now.Day, now.Hour + minute / 60, minute % 60, 0)) - now, TimeSpan.FromMinutes(1));
             Log.Info(_tag, "Type \"exit\" to stop the bot.");
             var running = true;
             while(running)
