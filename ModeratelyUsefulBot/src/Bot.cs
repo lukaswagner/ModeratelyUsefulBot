@@ -13,15 +13,19 @@ namespace ModeratelyUsefulBot
         private static string _tag = "Bot";
         private TelegramBotClient _botClient;
         private Dictionary<string, Command> _commands;
+        private List<TimedCommand> _timedCommands;
         private Command _fallbackCommand;
         private List<int> _admins;
 
-        internal Bot(string token, List<Command> commands, List<int> admins, string fallbackMessage = "Sorry, but I don't know how to do that.")
+        internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
             _botClient = new TelegramBotClient(token);
             
             _commands = commands.ToDictionary(cmd => cmd.Name, cmd => { cmd.BotClient = _botClient; return cmd; });
             _fallbackCommand = new Command("", (c, m, a) => c.SendTextMessageAsync(m.Chat.Id, fallbackMessage), _botClient);
+
+            _timedCommands = timedCommands;
+            _timedCommands.ForEach(tc => tc.BotClient = _botClient);
 
             _admins = admins;
 
@@ -65,10 +69,19 @@ namespace ModeratelyUsefulBot
                     commands.Add(command);
             }
 
-            if(hasCustomFallbackMessage)
-                return new Bot(token, commands, admins, fallbackMessage);
+            var timedCommands = new List<TimedCommand>();
+            var timedCommandIndex = 1;
+            while (Config.DoesPropertyExist(path + "/timedCommands/timedCommand[" + timedCommandIndex + "]"))
+            {
+                var timedCommand = TimedCommand.CreateTimedCommand(path, timedCommandIndex++);
+                if (timedCommand != null)
+                    timedCommands.Add(timedCommand);
+            }
+
+            if (hasCustomFallbackMessage)
+                return new Bot(token, commands, timedCommands, admins, fallbackMessage);
             else
-                return new Bot(token, commands, admins);
+                return new Bot(token, commands, timedCommands, admins);
         }
 
         internal void StopReceiving() => _botClient?.StopReceiving();
@@ -118,6 +131,11 @@ namespace ModeratelyUsefulBot
                 Log.Error(_tag, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
                 _botClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
+        }
+
+        internal void RunTimedCommands()
+        {
+            _timedCommands.ForEach(tc => tc.RunIfTimeUp());
         }
     }
 }

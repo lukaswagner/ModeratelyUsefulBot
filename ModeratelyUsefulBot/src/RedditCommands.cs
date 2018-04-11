@@ -43,5 +43,12 @@ namespace ModeratelyUsefulBot
             var photo = new FileToSend(post.Url);
             botClient.SendPhotoAsync(message.Chat.Id, photo, post.Title);
         }
+
+        internal static void LinkTopMeme(TelegramBotClient botClient, ChatId chatId)
+        {
+            Log.Debug(_tag, "Sending meme.");
+            var post = _dankmemes.Hot.Skip(_postOffset).Take(1).First();
+            botClient.SendTextMessageAsync(chatId, "It is " + DateTime.Now.DayOfWeek.ToString() + ", my dudes[.](" + post.Url + ")", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+        }
     }
 }

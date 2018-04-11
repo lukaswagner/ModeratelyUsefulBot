@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -12,11 +13,14 @@ namespace ModeratelyUsefulBot
     {
         private static string _tag = "Main";
         private static List<Bot> _bots;
+        private static Timer _timer;
 
         private static void Main(string[] args)
         {
             Log.Enable(Config.GetDefault("log/consoleLevel", "Info"), Config.GetDefault("log/fileLevel", "Off"));
             _startBots();
+            var now = DateTime.Now;
+            _timer = new Timer(_runTimedCommands, null, (new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute + 1, 0)) - now, TimeSpan.FromMinutes(1));
             Log.Info(_tag, "Type \"exit\" to stop the bot.");
             var running = true;
             while(running)
@@ -40,6 +44,12 @@ namespace ModeratelyUsefulBot
                 if (bot != null)
                     _bots.Add(bot);
             }
+        }
+
+        private static void _runTimedCommands(object state)
+        {
+            Log.Debug(_tag, "Running timed commands.");
+            _bots.ForEach(b => b.RunTimedCommands());
         }
     }
 }
