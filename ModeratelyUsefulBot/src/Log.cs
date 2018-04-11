@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -19,12 +20,14 @@ namespace ModeratelyUsefulBot
             public LogLevel LogLevel;
             public string Tag;
             public string Message;
+            public string Time;
 
             public LogEntry(LogLevel logLevel, string tag, string message)
             {
                 LogLevel = logLevel;
                 Tag = tag;
                 Message = message;
+                Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
             }
 
             public void LogToConsole()
@@ -33,7 +36,7 @@ namespace ModeratelyUsefulBot
                 {
                     Console.ForegroundColor = consoleColor;
                 }
-                Console.WriteLine(_getLogLevelString(LogLevel) + " " + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message);
+                Console.WriteLine(_getLogLevelString(LogLevel) + (LogTimes ? "[" + Time + "] " : " ") + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message);
                 Console.ResetColor();
             }
 
@@ -89,6 +92,7 @@ namespace ModeratelyUsefulBot
         private static LogLevel _fileLevel = LogLevel.Off;
         private static LogLevel _level = LogLevel.Off;
         public static int TagLength = 15;
+        public static bool LogTimes = true;
 
         private static void _exitHandler(object sender, EventArgs e) => Disable();
 
