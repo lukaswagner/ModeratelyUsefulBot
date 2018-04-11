@@ -98,10 +98,20 @@ namespace ModeratelyUsefulBot
             if (type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
             {
                 var message = e.Update.Message;
-                Log.Info(_tag, "Received Message: " + message.Text);
+                Log.Info(_tag, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
                 if (message.Text.StartsWith('/'))
                     _reactToCommand(message);
             }
+        }
+
+        private static string _getSenderInfo(Message message)
+        {
+            var result = message.From.Id + " (" + message.From.FirstName + " " + message.From.LastName + ")";
+            if (message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private)
+                result += " in private chat";
+            else
+                result += " in group " + message.Chat.Id + " (" + message.Chat.Title + ")";
+            return result;
         }
 
         private void _reactToCommand(Message message)
