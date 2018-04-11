@@ -36,14 +36,19 @@ namespace ModeratelyUsefulBot
                 {
                     Console.ForegroundColor = consoleColor;
                 }
-                Console.WriteLine(_getLogLevelString(LogLevel) + (LogTimes ? "[" + Time + "] " : " ") + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message);
+                Console.WriteLine(_getLogString());
                 Console.ResetColor();
             }
 
             public void LogToFile(StreamWriter writer)
             {
-                writer.WriteLine(_getLogLevelString(LogLevel) + " " + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message);
+                writer.WriteLine(_getLogString());
                 writer.Flush();
+            }
+
+            private string _getLogString()
+            {
+                return _getLogLevelString(LogLevel) + (LogTimes ? "[" + Time + "] " : " ") + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message;
             }
 
             private static string _getLogLevelString(LogLevel logLevel)
