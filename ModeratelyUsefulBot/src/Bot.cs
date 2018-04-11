@@ -16,8 +16,9 @@ namespace ModeratelyUsefulBot
         private List<TimedCommand> _timedCommands;
         private Command _fallbackCommand;
         private List<int> _admins;
+        private string _name;
 
-        internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string fallbackMessage = "Sorry, but I don't know how to do that.")
+        internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
             _botClient = new TelegramBotClient(token);
             
@@ -28,6 +29,10 @@ namespace ModeratelyUsefulBot
             _timedCommands.ForEach(tc => tc.BotClient = _botClient);
 
             _admins = admins;
+
+            _name = name == "" ? _tag : (_tag + " (" + name + ")");
+            if (_name.Length > Log.TagLength)
+                _name = _name.Substring(0, Log.TagLength);
 
             _botClient.OnUpdate += _onUpdate;
             _botClient.StartReceiving();
@@ -51,6 +56,7 @@ namespace ModeratelyUsefulBot
             var hasCustomFallbackMessage = Config.DoesPropertyExist(path + "/fallbackMessage");
             string fallbackMessage = "";
             if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);
+            string logName = Config.GetDefault(path + "/logName", "");
 
             var admins = new List<int>();
             if(Config.DoesPropertyExist(path + "/admins"))
@@ -79,9 +85,9 @@ namespace ModeratelyUsefulBot
             }
 
             if (hasCustomFallbackMessage)
-                return new Bot(token, commands, timedCommands, admins, fallbackMessage);
+                return new Bot(token, commands, timedCommands, admins, logName, fallbackMessage);
             else
-                return new Bot(token, commands, timedCommands, admins);
+                return new Bot(token, commands, timedCommands, admins, logName);
         }
 
         internal void StopReceiving() => _botClient?.StopReceiving();
@@ -89,7 +95,7 @@ namespace ModeratelyUsefulBot
         private async void _check()
         {
             var me = await _botClient.GetMeAsync();
-            Log.Info(_tag, "Hello! My name is " + me.FirstName + ".");
+            Log.Info(_name, "Hello! My name is " + me.FirstName + ".");
         }
 
         private void _onUpdate(object sender, UpdateEventArgs e)
@@ -98,7 +104,7 @@ namespace ModeratelyUsefulBot
             if (type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
             {
                 var message = e.Update.Message;
-                Log.Info(_tag, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
+                Log.Info(_name, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
                 if (message.Text.StartsWith('/'))
                     _reactToCommand(message);
             }
@@ -138,7 +144,7 @@ namespace ModeratelyUsefulBot
             }
             catch (Exception ex)
             {
-                Log.Error(_tag, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
+                Log.Error(_name, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
                 _botClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
         }
