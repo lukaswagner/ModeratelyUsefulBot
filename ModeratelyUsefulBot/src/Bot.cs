@@ -15,7 +15,7 @@ namespace ModeratelyUsefulBot
         internal Dictionary<string, Command> Commands;
         private List<TimedCommand> _timedCommands;
         private Command _fallbackCommand;
-        private List<int> _admins;
+        public List<int> Admins;
         private string _name;
 
         internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
@@ -28,7 +28,7 @@ namespace ModeratelyUsefulBot
             _timedCommands = timedCommands;
             _timedCommands.ForEach(tc => tc.Bot = this);
 
-            _admins = admins;
+            Admins = admins;
 
             _name = name == "" ? _tag : (_tag + " (" + name + ")");
             if (_name.Length > Log.TagLength)
@@ -134,7 +134,7 @@ namespace ModeratelyUsefulBot
                 if (!Commands.TryGetValue(name, out Command command))
                     command = _fallbackCommand;
 
-                if (command.AdminOnly && !_admins.Contains(message.From.Id))
+                if (command.AdminOnly && !Admins.Contains(message.From.Id))
                 {
                     BotClient.SendTextMessageAsync(message.Chat.Id, "Don't tell me what to do!");
                     return;

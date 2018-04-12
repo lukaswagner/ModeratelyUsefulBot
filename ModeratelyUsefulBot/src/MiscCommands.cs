@@ -69,5 +69,16 @@ namespace ModeratelyUsefulBot
             command.AdminOnly = adminOnly;
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + command.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
         }
+
+        internal static void Help(Bot bot, Message message, IEnumerable<string> arguments)
+        {
+            var isAdmin = bot.Admins.Contains(message.From.Id);
+            var result = "You can use these commands:";
+            foreach(var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin))
+            {
+                result += "\n" + command.Name;
+            }
+            bot.BotClient.SendTextMessageAsync(message.Chat.Id, result);
+        }
     }
 }
