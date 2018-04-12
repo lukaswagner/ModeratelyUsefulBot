@@ -16,8 +16,9 @@ namespace ModeratelyUsefulBot
         private static Timer _timer;
         private static bool _running = true;
         private static AutoResetEvent _exitHandle = new AutoResetEvent(false);
+        private static bool _requestRestart = false;
 
-        private static void Main(string[] args)
+        private static int Main(string[] args)
         {
             Log.Enable(Config.GetDefault("log/consoleLevel", "Info"), Config.GetDefault("log/fileLevel", "Off"));
             _startBots();
@@ -28,6 +29,7 @@ namespace ModeratelyUsefulBot
 
             _checkConsoleInput();
             _exitHandle.WaitOne();
+            return _requestRestart ? 1 : 0;
         }
 
         private static void _startBots()
@@ -73,12 +75,15 @@ namespace ModeratelyUsefulBot
         {
             if (input == "exit")
                 Exit();
+            if (input == "restart")
+                Exit(requestRestart: true);
         }
 
-        internal static async void Exit(int secondsUntilExit = 5)
+        internal static async void Exit(int secondsUntilExit = 5, bool requestRestart = false)
         {
             Log.Info(_tag, "Shutting down in " + secondsUntilExit + " seconds.");
             _running = false;
+            _requestRestart = requestRestart;
 
             // always wait a bit to ensure the bot has confirmed receiving the message
             await Task.Delay(500);

@@ -32,16 +32,21 @@ namespace ModeratelyUsefulBot
 
         internal static void Exit(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
         {
-            if(arguments.Count() > 0 && int.TryParse(arguments.First(), out int secondsUntilExit))
-            {
-                botClient.SendTextMessageAsync(message.Chat.Id, "Shutting down in " + secondsUntilExit + " seconds.");
-                Program.Exit(secondsUntilExit);
-            }
-            else
-            {
-                botClient.SendTextMessageAsync(message.Chat.Id, "Shutting down in " + ((Action<int>)Program.Exit).Method.GetParameters().First().DefaultValue + " seconds.");
-                Program.Exit();
-            }
+            _exit(botClient, message, arguments, false);
+        }
+
+        internal static void Restart(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        {
+            _exit(botClient, message, arguments, true);
+        }
+
+        private static void _exit(TelegramBotClient botClient, Message message, IEnumerable<string> arguments, bool requestRestart)
+        {
+            if (arguments.Count() == 0 || !int.TryParse(arguments.First(), out int secondsUntilExit))
+                secondsUntilExit = (int)((Action<int, bool>)Program.Exit).Method.GetParameters().First().DefaultValue;
+
+            botClient.SendTextMessageAsync(message.Chat.Id, (requestRestart ? "Restarting" : "Shutting down") + " in " + secondsUntilExit + " seconds.");
+            Program.Exit(secondsUntilExit, requestRestart);
         }
     }
 }

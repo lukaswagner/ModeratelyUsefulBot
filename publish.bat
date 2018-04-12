@@ -18,11 +18,16 @@ if "%~4"=="" (
 )
 set target=ModeratelyUsefulBot
 if not "%~5"=="" set target=%~5
+rem // store initial working dir
+set cwd=%cd%
 rem // publish project
 cd %target%
 dotnet publish -r linux-arm -c "Release"
-rem // prepare commands for psftp
+rem // open output dir
 cd bin\Release\netcoreapp2.0\linux-arm\
+rem // add start script
+copy %cwd%\start.sh publish\start.sh
+rem // prepare commands for psftp
 mkdir temp
 .>temp\psftp.bat 2>nul
 rem // remove old stuff
@@ -39,6 +44,7 @@ echo mput publish/data/* >> temp\psftp.bat
 rem // change permissions - make target runnable
 echo cd .. >> temp\psftp.bat
 echo chmod 755 ./%target% >> temp\psftp.bat
+echo chmod 755 ./start.sh >> temp\psftp.bat
 rem // exit psftp
 echo quit >> temp\psftp.bat
 rem // run psftp with previously stored commands
