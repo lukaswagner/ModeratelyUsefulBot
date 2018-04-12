@@ -10,16 +10,16 @@ namespace ModeratelyUsefulBot
 {
     class Command
     {
-        private Action<TelegramBotClient, Message, IEnumerable<string>> _action;
+        private Action<Bot, Message, IEnumerable<string>> _action;
 
         private static string _tag = "Command";
         public string Name { private set; get; }
-        public TelegramBotClient BotClient;
+        public Bot Bot;
         public bool AdminOnly;
 
-        public Command(string name, Action<TelegramBotClient, Message, IEnumerable<string>> action, TelegramBotClient botClient = null, bool adminOnly = false)
+        public Command(string name, Action<Bot, Message, IEnumerable<string>> action, Bot bot = null, bool adminOnly = false)
         {
-            BotClient = botClient;
+            Bot = bot;
             Name = name;
             _action = action;
             AdminOnly = adminOnly;
@@ -48,17 +48,17 @@ namespace ModeratelyUsefulBot
             RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);
             var actionMethod = actionClass.GetMethod(splitAction[1], BindingFlags.Static | BindingFlags.NonPublic);
             if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
-            var action = (Action<TelegramBotClient, Message, IEnumerable<string>>)Delegate.CreateDelegate(typeof(Action<TelegramBotClient, Message, IEnumerable<string>>), actionMethod);
+            var action = (Action<Bot, Message, IEnumerable<string>>)Delegate.CreateDelegate(typeof(Action<Bot, Message, IEnumerable<string>>), actionMethod);
 
             return new Command("/" + name, action, adminOnly: adminOnly);
         }
 
         public void Invoke(Message message, IEnumerable<string> arguments)
         {
-            if (BotClient == null)
+            if (Bot == null)
                 return;
 
-            _action.Invoke(BotClient, message, arguments);
+            _action.Invoke(Bot, message, arguments);
         }
     }
 }

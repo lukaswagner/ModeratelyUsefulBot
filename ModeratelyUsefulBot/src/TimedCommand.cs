@@ -12,13 +12,13 @@ namespace ModeratelyUsefulBot
     class TimedCommand
     {
         private static string _tag = "TimedCommand";
-        private Action<TelegramBotClient, ChatId> _action;
+        private Action<Bot, ChatId> _action;
         private DateTime _next;
         private TimeSpan _timeSpan;
         private ChatId _chatId;
-        internal TelegramBotClient BotClient;
+        internal Bot Bot;
 
-        internal TimedCommand(DateTime start, TimeSpan timeSpan, Action<TelegramBotClient, ChatId> action, ChatId chatId, TelegramBotClient botClient = null)
+        internal TimedCommand(DateTime start, TimeSpan timeSpan, Action<Bot, ChatId> action, ChatId chatId, Bot bot = null)
         {
             var now = DateTime.Now;
             var next = start;
@@ -28,7 +28,7 @@ namespace ModeratelyUsefulBot
             _timeSpan = timeSpan;
             _action = action;
             _chatId = chatId;
-            BotClient = botClient;
+            Bot = bot;
         }
 
         internal static TimedCommand CreateTimedCommand(string botPath, int index)
@@ -58,7 +58,7 @@ namespace ModeratelyUsefulBot
             RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);
             var actionMethod = actionClass.GetMethod(splitAction[1], BindingFlags.Static | BindingFlags.NonPublic);
             if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
-            var action = (Action<TelegramBotClient, ChatId>)Delegate.CreateDelegate(typeof(Action<TelegramBotClient, ChatId>), actionMethod);
+            var action = (Action<Bot, ChatId>)Delegate.CreateDelegate(typeof(Action<Bot, ChatId>), actionMethod);
 
             return new TimedCommand(start, timeSpan, action, new ChatId(chatId));
         }
@@ -70,7 +70,7 @@ namespace ModeratelyUsefulBot
             {
                 while (_next < now)
                     _next += _timeSpan;
-                _action.Invoke(BotClient, _chatId);
+                _action.Invoke(Bot, _chatId);
             }
         }
     }

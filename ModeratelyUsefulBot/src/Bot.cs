@@ -11,8 +11,8 @@ namespace ModeratelyUsefulBot
     class Bot
     {
         private static string _tag = "Bot";
-        private TelegramBotClient _botClient;
-        private Dictionary<string, Command> _commands;
+        internal TelegramBotClient BotClient;
+        internal Dictionary<string, Command> Commands;
         private List<TimedCommand> _timedCommands;
         private Command _fallbackCommand;
         private List<int> _admins;
@@ -20,13 +20,13 @@ namespace ModeratelyUsefulBot
 
         internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
-            _botClient = new TelegramBotClient(token);
+            BotClient = new TelegramBotClient(token);
             
-            _commands = commands.ToDictionary(cmd => cmd.Name, cmd => { cmd.BotClient = _botClient; return cmd; });
-            _fallbackCommand = new Command("", (c, m, a) => c.SendTextMessageAsync(m.Chat.Id, fallbackMessage), _botClient);
+            Commands = commands.ToDictionary(cmd => cmd.Name, cmd => { cmd.Bot = this; return cmd; });
+            _fallbackCommand = new Command("", (c, m, a) => c.BotClient.SendTextMessageAsync(m.Chat.Id, fallbackMessage), this);
 
             _timedCommands = timedCommands;
-            _timedCommands.ForEach(tc => tc.BotClient = _botClient);
+            _timedCommands.ForEach(tc => tc.Bot = this);
 
             _admins = admins;
 
@@ -34,8 +34,8 @@ namespace ModeratelyUsefulBot
             if (_name.Length > Log.TagLength)
                 _name = _name.Substring(0, Log.TagLength);
 
-            _botClient.OnUpdate += _onUpdate;
-            _botClient.StartReceiving();
+            BotClient.OnUpdate += _onUpdate;
+            BotClient.StartReceiving();
 
             _check();
         }
@@ -90,11 +90,11 @@ namespace ModeratelyUsefulBot
                 return new Bot(token, commands, timedCommands, admins, logName);
         }
 
-        internal void StopReceiving() => _botClient?.StopReceiving();
+        internal void StopReceiving() => BotClient?.StopReceiving();
 
         private async void _check()
         {
-            var me = await _botClient.GetMeAsync();
+            var me = await BotClient.GetMeAsync();
             Log.Info(_name, "Hello! My name is " + me.FirstName + ".");
         }
 
@@ -131,12 +131,12 @@ namespace ModeratelyUsefulBot
                     name = name.Substring(0, containsUsername);
                 var arguments = split.Skip(1);
 
-                if (!_commands.TryGetValue(name, out Command command))
+                if (!Commands.TryGetValue(name, out Command command))
                     command = _fallbackCommand;
 
                 if (command.AdminOnly && !_admins.Contains(message.From.Id))
                 {
-                    _botClient.SendTextMessageAsync(message.Chat.Id, "Don't tell me what to do!");
+                    BotClient.SendTextMessageAsync(message.Chat.Id, "Don't tell me what to do!");
                     return;
                 }
 
@@ -145,7 +145,7 @@ namespace ModeratelyUsefulBot
             catch (Exception ex)
             {
                 Log.Error(_name, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
-                _botClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
+                BotClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
         }
 

@@ -36,19 +36,19 @@ namespace ModeratelyUsefulBot
             Log.Info(_tag, "Reddit API setup done.");
         }
 
-        internal static void GetRandomMeme(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        internal static void GetRandomMeme(Bot bot, Message message, IEnumerable<string> arguments)
         {
             int offset = _random.Next(25);
             var post = _dankmemes.Hot.Skip(_postOffset + offset).Take(1).First();
             var photo = new FileToSend(post.Url);
-            botClient.SendPhotoAsync(message.Chat.Id, photo, post.Title);
+            bot.BotClient.SendPhotoAsync(message.Chat.Id, photo, post.Title);
         }
 
-        internal static void LinkTopMeme(TelegramBotClient botClient, ChatId chatId)
+        internal static void LinkTopMeme(Bot bot, ChatId chatId)
         {
             Log.Debug(_tag, "Sending meme.");
             var post = _dankmemes.Hot.Skip(_postOffset).Take(1).First();
-            botClient.SendTextMessageAsync(chatId, "It is " + DateTime.Now.DayOfWeek.ToString() + ", my dudes[.](" + post.Url + ")", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+            bot.BotClient.SendTextMessageAsync(chatId, "It is " + DateTime.Now.DayOfWeek.ToString() + ", my dudes[.](" + post.Url + ")", Telegram.Bot.Types.Enums.ParseMode.Markdown);
         }
     }
 }

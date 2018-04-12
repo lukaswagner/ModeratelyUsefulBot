@@ -10,43 +10,64 @@ namespace ModeratelyUsefulBot
 {
     static class MiscCommands
     {
-        internal static void Ping(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        internal static void Ping(Bot bot, Message message, IEnumerable<string> arguments)
         {
-            botClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
+            bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
         }
 
-        internal static void GetLog(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        internal static void GetLog(Bot bot, Message message, IEnumerable<string> arguments)
         {
-            if(arguments.Count() == 0 || arguments.First().ToLower() == "print")
+            if (arguments.Count() == 0 || arguments.First().ToLower() == "print")
             {
-                if(Log.FilePath == null || Log.FilePath == "")
+                if (Log.FilePath == null || Log.FilePath == "")
                 {
-                    botClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "Logging to file is disabled. Can't show current log file.");
+                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "Logging to file is disabled. Can't show current log file.");
                     return;
                 }
                 using (var fs = new FileStream(Log.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var sr = new StreamReader(fs))
-                    botClient.SendTextMessageAsync(message.Chat.Id, "Current log file (" + Log.FilePath.Replace("_", "\\_") + "):\n```\n" + sr.ReadToEnd() + "\n```", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Current log file (" + Log.FilePath.Replace("_", "\\_") + "):\n```\n" + sr.ReadToEnd() + "\n```", Telegram.Bot.Types.Enums.ParseMode.Markdown);
             }
         }
 
-        internal static void Exit(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        internal static void Exit(Bot bot, Message message, IEnumerable<string> arguments)
         {
-            _exit(botClient, message, arguments, false);
+            _exit(bot, message, arguments, false);
         }
 
-        internal static void Restart(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        internal static void Restart(Bot bot, Message message, IEnumerable<string> arguments)
         {
-            _exit(botClient, message, arguments, true);
+            _exit(bot, message, arguments, true);
         }
 
-        private static void _exit(TelegramBotClient botClient, Message message, IEnumerable<string> arguments, bool requestRestart)
+        private static void _exit(Bot bot, Message message, IEnumerable<string> arguments, bool requestRestart)
         {
             if (arguments.Count() == 0 || !int.TryParse(arguments.First(), out int secondsUntilExit))
                 secondsUntilExit = (int)((Action<int, bool>)Program.Exit).Method.GetParameters().First().DefaultValue;
 
-            botClient.SendTextMessageAsync(message.Chat.Id, (requestRestart ? "Restarting" : "Shutting down") + " in " + secondsUntilExit + " seconds.");
+            bot.BotClient.SendTextMessageAsync(message.Chat.Id, (requestRestart ? "Restarting" : "Shutting down") + " in " + secondsUntilExit + " seconds.");
             Program.Exit(secondsUntilExit, requestRestart);
+        }
+
+        internal static void SetAdminOnly(Bot bot, Message message, IEnumerable<string> arguments)
+        {
+            if (arguments.Count() < 2)
+            {
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a command and a boolean.");
+                return;
+            }
+            if (!bot.Commands.TryGetValue("/" + arguments.First(), out var command))
+            {
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find command.");
+                return;
+            }
+            if (!bool.TryParse(arguments.Skip(1).First(), out var adminOnly))
+            {
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not parse boolean.");
+                return;
+            }
+            command.AdminOnly = adminOnly;
+            bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + command.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
         }
     }
 }

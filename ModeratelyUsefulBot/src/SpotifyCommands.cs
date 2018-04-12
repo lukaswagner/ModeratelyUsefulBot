@@ -72,18 +72,18 @@ namespace ModeratelyUsefulBot
                 _spotify.AccessToken = _token.AccessToken;
         }
 
-        internal static void SendPlaylistStats(TelegramBotClient botClient, Message message, IEnumerable<string> arguments)
+        internal static void SendPlaylistStats(Bot bot, Message message, IEnumerable<string> arguments)
         {
             // check for valid settings
             if (_userId == null)
             {
-                botClient.SendTextMessageAsync(message.Chat.Id, "Playlist user not specified in config.");
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Playlist user not specified in config.");
                 return;
             }
 
             if (_playlistId == null)
             {
-                botClient.SendTextMessageAsync(message.Chat.Id, "Playlist id not specified in config.");
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Playlist id not specified in config.");
                 return;
             }
 
@@ -95,12 +95,12 @@ namespace ModeratelyUsefulBot
             if(arguments.Count() > 0 && arguments.First().ToLower() == "refresh")
             {
                 _loadPlaylist();
-                botClient.SendTextMessageAsync(message.Chat.Id, "Ok, I refreshed the playlist.");
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Ok, I refreshed the playlist.");
                 return;
             }
 
             // send placeholder, get playlist and do calculations
-            var placeholderMessage = botClient.SendTextMessageAsync(message.Chat.Id, "Crunching the latest data, just for you. Hang tight...");
+            var placeholderMessage = bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Crunching the latest data, just for you. Hang tight...");
 
             if(_cachedPlaylistOutdated())
                 _loadPlaylist();
@@ -108,7 +108,7 @@ namespace ModeratelyUsefulBot
             var answer = (arguments.Count() > 0 && arguments.First().ToLower() == "full") ? _getFullStats() : _getBasicStats();
 
             placeholderMessage.Wait();
-            botClient.EditMessageTextAsync(message.Chat.Id, placeholderMessage.Result.MessageId, answer);
+            bot.BotClient.EditMessageTextAsync(message.Chat.Id, placeholderMessage.Result.MessageId, answer);
         }
 
         private static bool _cachedPlaylistOutdated()
