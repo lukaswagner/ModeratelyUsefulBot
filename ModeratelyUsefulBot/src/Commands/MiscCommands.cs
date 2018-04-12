@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace ModeratelyUsefulBot
