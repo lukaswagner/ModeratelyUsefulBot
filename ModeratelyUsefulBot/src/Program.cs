@@ -21,6 +21,7 @@ namespace ModeratelyUsefulBot
         private static int Main(string[] args)
         {
             Log.Enable(Config.GetDefault("log/consoleLevel", "Info"), Config.GetDefault("log/fileLevel", "Off"));
+            Log.Info(_tag, "Starting...");
             _startBots();
             var now = DateTime.Now;
             var minute = now.Minute + 1;
