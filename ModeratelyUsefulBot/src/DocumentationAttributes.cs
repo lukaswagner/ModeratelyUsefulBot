@@ -19,5 +19,6 @@ namespace ModeratelyUsefulBot
         public string Description;
         public bool Optional = false;
         public string DefaultValue;
+        public Type Type;
     }
 }

@@ -10,7 +10,7 @@ namespace ModeratelyUsefulBot
     static class MiscCommands
     {
         [Command(Name = "Ping", ShortDescription = "test bot status", Description = "Checks if the Bot is available. Replies with the given text, or a sample text if none is specified.")]
-        [Argument(Name = "Reply text", Description = "The text which the bot will reply with.", Optional = true, DefaultValue = "pong")]
+        [Argument(Name = "Reply text", Type = typeof(string), Description = "The text which the bot will reply with.", Optional = true, DefaultValue = "pong")]
         internal static void Ping(Bot bot, Message message, IEnumerable<string> arguments)
         {
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
@@ -73,15 +73,60 @@ namespace ModeratelyUsefulBot
 
         internal static void Help(Bot bot, Message message, IEnumerable<string> arguments)
         {
-            var isAdmin = bot.Admins.Contains(message.From.Id);
-            var result = "You can use these commands:";
-            foreach(var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin))
+            bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() == 0 ? _getCommandList(bot, message.From.Id) : _getCommandInfo(bot, message.From.Id, arguments.First()));
+        }
+
+        private static string _getCommandList(Bot bot, int user)
+        {
+            var isAdmin = bot.Admins.Contains(user);
+            var result = "These are the commands available to you. Use /help followed by a command for more information on it.\n";
+            foreach (var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin))
             {
                 result += "\n" + command.Name;
                 if (Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute)
                     result += " - " + commandAttribute.ShortDescription;
             }
-            bot.BotClient.SendTextMessageAsync(message.Chat.Id, result);
+            return result;
+        }
+
+        private static string _getCommandInfo(Bot bot, int user, string name)
+        {
+            if (!name.StartsWith('/'))
+                name = '/' + name;
+            if (!bot.Commands.TryGetValue(name, out Command command))
+                return "Could not find command " + name + ".";
+            if (!(Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute))
+                return "No documentation available for command " + name + ".";
+
+            string result = commandAttribute.Name + " - " + commandAttribute.Description;
+
+            var argumentAttributes = Attribute.GetCustomAttributes(command.Action.Method, typeof(ArgumentAttribute)).Select(a => a as ArgumentAttribute).Where(a => a != null);
+            if (argumentAttributes.Count() == 0)
+                result += "\n\nThis command takes no attributes.";
+            else
+            {
+                result += "\n\nAttributes:";
+                foreach (var argumentAttribute in argumentAttributes)
+                {
+                    result += "\n- " + argumentAttribute.Name + "\n  ";
+
+                    result +=
+                        argumentAttribute.Type == typeof(string) ? "Text" :
+                        argumentAttribute.Type == typeof(int) ? "Integer" :
+                        argumentAttribute.Type == typeof(float) ? "Decimal" : "Unknown type";
+
+                    if (argumentAttribute.Optional)
+                        result += ", optional";
+                    if (argumentAttribute.DefaultValue != null)
+                        result += ", default: " + argumentAttribute.DefaultValue;
+                    result += ".\n  " + argumentAttribute.Description;
+                }
+            }
+
+            if (command.AdminOnly && !bot.Admins.Contains(user))
+                result += "\n\nYou can't use this command, it is available to admins only.";
+
+            return result;
         }
     }
 }
