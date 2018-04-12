@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using Telegram.Bot.Types;
@@ -8,6 +9,8 @@ namespace ModeratelyUsefulBot
 {
     static class MiscCommands
     {
+        [Command(Name = "Ping", ShortDescription = "test bot status", Description = "Checks if the Bot is available. Replies with the given text, or a sample text if none is specified.")]
+        [Argument(Name = "Reply text", Description = "The text which the bot will reply with.", Optional = true, DefaultValue = "pong")]
         internal static void Ping(Bot bot, Message message, IEnumerable<string> arguments)
         {
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
@@ -75,6 +78,8 @@ namespace ModeratelyUsefulBot
             foreach(var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin))
             {
                 result += "\n" + command.Name;
+                if (Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute)
+                    result += " - " + commandAttribute.ShortDescription;
             }
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, result);
         }

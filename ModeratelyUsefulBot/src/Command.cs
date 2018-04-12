@@ -8,7 +8,7 @@ namespace ModeratelyUsefulBot
 {
     class Command
     {
-        private Action<Bot, Message, IEnumerable<string>> _action;
+        internal Action<Bot, Message, IEnumerable<string>> Action;
 
         private static string _tag = "Command";
         public string Name { private set; get; }
@@ -19,7 +19,7 @@ namespace ModeratelyUsefulBot
         {
             Bot = bot;
             Name = name;
-            _action = action;
+            Action = action;
             AdminOnly = adminOnly;
         }
 
@@ -56,7 +56,7 @@ namespace ModeratelyUsefulBot
             if (Bot == null)
                 return;
 
-            _action.Invoke(Bot, message, arguments);
+            Action.Invoke(Bot, message, arguments);
         }
     }
 }
