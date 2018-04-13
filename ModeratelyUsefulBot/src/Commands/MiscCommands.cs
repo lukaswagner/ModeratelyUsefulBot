@@ -18,17 +18,23 @@ namespace ModeratelyUsefulBot
 
         internal static void GetLog(Bot bot, Message message, IEnumerable<string> arguments)
         {
-            if (arguments.Count() == 0 || arguments.First().ToLower() == "print")
+            if (Log.FilePath == null || Log.FilePath == "")
             {
-                if (Log.FilePath == null || Log.FilePath == "")
-                {
-                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "Logging to file is disabled. Can't show current log file.");
-                    return;
-                }
-                using (var fs = new FileStream(Log.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var sr = new StreamReader(fs))
-                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Current log file (" + Log.FilePath.Replace("_", "\\_") + "):\n```\n" + sr.ReadToEnd() + "\n```", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Logging to file is disabled. Can't show current log file.");
+                return;
             }
+
+            var fileName = Log.FilePath.Split('/').Last();
+            using (var fs = new FileStream(Log.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                if (arguments.Count() == 0 || arguments.First().ToLower() == "print")
+                    using (var sr = new StreamReader(fs))
+                        bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Current log file (" + fileName.Replace("_", "\\_") + "):\n```\n" + sr.ReadToEnd() + "\n```", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                else if (arguments.First().ToLower() == "file")
+                {
+                    bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
+                }
+                else
+                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use print or file.");
         }
 
         internal static void Exit(Bot bot, Message message, IEnumerable<string> arguments)
