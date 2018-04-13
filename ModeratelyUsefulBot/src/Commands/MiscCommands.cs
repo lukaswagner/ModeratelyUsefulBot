@@ -16,6 +16,8 @@ namespace ModeratelyUsefulBot
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
         }
 
+        [Command(Name = "Log", ShortDescription = "get event log", Description = "Retrieves the log file, if file logging is enabled. The log is either sent as message or as file.")]
+        [Argument(Name = "Send method", Type = typeof(string), Description = "How to return the log. Available options are \"print\" (send as message) and \"file\" (send text file).", Optional = true, DefaultValue = "file")]
         internal static void GetLog(Bot bot, Message message, IEnumerable<string> arguments)
         {
             if (Log.FilePath == null || Log.FilePath == "")
@@ -34,14 +36,18 @@ namespace ModeratelyUsefulBot
                     bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
                 }
                 else
-                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use print or file.");
+                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use \"print\" or \"file.\"");
         }
 
+        [Command(Name = "Exit", ShortDescription = "stop the bot", Description = "Stops the bot.")]
+        [Argument(Name = "Seconds until exit", Type = typeof(int), Description = "Delay until the bot is stopped.", Optional = true, DefaultValue = "5")]
         internal static void Exit(Bot bot, Message message, IEnumerable<string> arguments)
         {
             _exit(bot, message, arguments, false);
         }
 
+        [Command(Name = "Restart", ShortDescription = "restart the bot", Description = "Restarts the bot.")]
+        [Argument(Name = "Seconds until restart", Type = typeof(int), Description = "Delay until the bot is restarted.", Optional = true, DefaultValue = "5")]
         internal static void Restart(Bot bot, Message message, IEnumerable<string> arguments)
         {
             _exit(bot, message, arguments, true);
@@ -56,6 +62,9 @@ namespace ModeratelyUsefulBot
             Program.Exit(secondsUntilExit, requestRestart);
         }
 
+        [Command(Name = "Set AdminOnly", ShortDescription = "set who can use a command", Description = "Configures a comamnd to be available to all users or to admins only.")]
+        [Argument(Name = "Command", Type = typeof(string), Description = "Name of the command, with or without the leading slash.")]
+        [Argument(Name = "AdminOnly", Type = typeof(bool), Description = "If the command should be available to admins only (false - all users, true - admins only).")]
         internal static void SetAdminOnly(Bot bot, Message message, IEnumerable<string> arguments)
         {
             if (arguments.Count() < 2)
@@ -63,7 +72,7 @@ namespace ModeratelyUsefulBot
                 bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a command and a boolean.");
                 return;
             }
-            if (!bot.Commands.TryGetValue("/" + arguments.First(), out var command))
+            if (!bot.Commands.TryGetValue(arguments.First().StartsWith('/') ? arguments.First() : "/" + arguments.First(), out var command))
             {
                 bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find command.");
                 return;
@@ -77,6 +86,8 @@ namespace ModeratelyUsefulBot
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + command.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
         }
 
+        [Command(Name = "Help", ShortDescription = "get help about available commands", Description = "Shows a list of available commands, or information about a given command.")]
+        [Argument(Name = "Command", Type = typeof(string), Description = "Name of the command to get information on, with or without the leading slash.", Optional = true)]
         internal static void Help(Bot bot, Message message, IEnumerable<string> arguments)
         {
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() == 0 ? _getCommandList(bot, message.From.Id) : _getCommandInfo(bot, message.From.Id, arguments.First()));
@@ -119,7 +130,8 @@ namespace ModeratelyUsefulBot
                     result +=
                         argumentAttribute.Type == typeof(string) ? "Text" :
                         argumentAttribute.Type == typeof(int) ? "Integer" :
-                        argumentAttribute.Type == typeof(float) ? "Decimal" : "Unknown type";
+                        argumentAttribute.Type == typeof(float) ? "Decimal" :
+                        argumentAttribute.Type == typeof(bool) ? "Boolean" : "Unknown type";
 
                     if (argumentAttribute.Optional)
                         result += ", optional";
