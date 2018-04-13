@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Security;
@@ -10,24 +11,41 @@ namespace ModeratelyUsefulBot
     internal static class Config
     {
         private static string _tag = "Config";
+        private const string _defaultDoc = "config";
+        private const string _dir = "data/";
+        private const char _slash = '/';
 #if DEBUG
-        private static string _file = "data/debugConfig.xml";
+        private static Dictionary<string, string> _files = new Dictionary<string, string> { { "config", _dir + "debugConfig.xml" }, { "credentials", _dir + "debugCredentials.xml" } };
 #else
-        private static string _file = "data/config.xml";
+        private static Dictionary<string, string> _files = new Dictionary<string, string> { { "config", _dir + "config.xml" }, { "credentials", _dir + "credentials.xml" } };
 #endif
-        private static XmlDocument _doc = new XmlDocument();
+        private static Dictionary<string, XmlDocument> _docs = new Dictionary<string, XmlDocument>();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
-        static Config() => _doc.Load(_file);
+        static Config()
+        {
+            foreach(var file in _files)
+            {
+                var doc = new XmlDocument();
+                doc.Load(file.Value);
+                _docs.Add(file.Key, doc);
+            }
+        }
 
-        public static bool DoesPropertyExist(string property) => _doc.SelectSingleNode("/config/" + property) != null;
+        public static bool DoesPropertyExist(string property, string file = _defaultDoc) => _docs.TryGetValue(file, out var doc) && doc.SelectSingleNode(_slash + file + _slash + property) != null;
 
-        public static bool Get<T>(string property, out T value)
+        public static bool Get<T>(string property, out T value, string file = _defaultDoc)
         {
             value = default(T);
             var valueString = "";
 
-            var node = _doc.SelectSingleNode("/config/" + property);
+            if (!_docs.TryGetValue(file, out var doc))
+            {
+                Log.Warn(_tag, "Could not find file: " + file);
+                return false;
+            }
+
+            var node = doc.SelectSingleNode(_slash + file + _slash + property);
 
             if (node == null)
             {
@@ -57,28 +75,40 @@ namespace ModeratelyUsefulBot
             }
         }
 
-        public static T GetDefault<T>(string property, T defaultValue)
+        public static T GetDefault<T>(string property, T defaultValue, string file = _defaultDoc)
         {
-            if (!DoesPropertyExist(property))
+            if (!DoesPropertyExist(property, file))
             {
                 Log.Info(_tag, "Could not find property " + property + ". Using default value (" + defaultValue.ToString() + ").");
                 return defaultValue;
             }
-            Get<T>(property, out var outValue);
+            Get<T>(property, out var outValue, file);
             return outValue;
         }
 
-        public static bool Set(string property, object value)
+        public static bool Set(string property, object value, string file = _defaultDoc)
         {
+            if (!_docs.TryGetValue(file, out var doc))
+            {
+                Log.Warn(_tag, "Could not find file: " + file);
+                return false;
+            }
+
+            if(!_files.TryGetValue(file, out var fileName))
+            {
+                Log.Warn(_tag, "Could not find file location for file: " + file);
+                return false;
+            }
+
             var value_string = value.ToString();
 
-            var node = _traveseOrBuildHierarchy("/config/" + property);
+            var node = _traveseOrBuildHierarchy(doc, _slash + file + _slash + property);
 
             node.InnerText = value_string;
 
             try
             {
-                File.WriteAllText("Config/config.xml", Beautify(_doc));
+                File.WriteAllText(fileName, Beautify(doc));
             }
             catch (Exception ex)
             {
@@ -101,17 +131,17 @@ namespace ModeratelyUsefulBot
             return true;
         }
 
-        private static XmlNode _traveseOrBuildHierarchy(string path)
+        private static XmlNode _traveseOrBuildHierarchy(XmlDocument doc, string path)
         {
             var split = path.Trim('/').Split('/');
 
-            var parent = _doc as XmlNode;
+            var parent = doc as XmlNode;
 
             foreach (var node in split)
             {
                 var current = parent.SelectSingleNode(node);
                 if (current == null)
-                    current = parent.AppendChild(_doc.CreateElement(node));
+                    current = parent.AppendChild(doc.CreateElement(node));
 
                 parent = current;
             }

@@ -34,7 +34,7 @@ namespace ModeratelyUsefulBot
         {
             _auth = new AutorizationCodeAuth()
             {
-                ClientId = Config.GetDefault("spotify/auth/clientId", ""),
+                ClientId = Config.GetDefault("spotify/auth/clientId", "", "credentials"),
                 RedirectUri = "http://localhost",
                 Scope = Scope.UserReadPrivate,
             };
@@ -65,7 +65,7 @@ namespace ModeratelyUsefulBot
 
         private static void _refreshToken()
         {
-            _token = _auth.RefreshToken(Config.GetDefault("spotify/auth/refreshToken", ""), Config.GetDefault("spotify/auth/clientSecret", ""));
+            _token = _auth.RefreshToken(Config.GetDefault("spotify/auth/refreshToken", "", "credentials"), Config.GetDefault("spotify/auth/clientSecret", "", "credentials"));
             if(_spotify != null)
                 _spotify.AccessToken = _token.AccessToken;
         }

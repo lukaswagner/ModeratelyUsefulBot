@@ -51,7 +51,7 @@ namespace ModeratelyUsefulBot
             }
 
             if (!checkArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
-            if(!checkArg(Config.Get(path + "/token", out string token), "No token found in config.")) return null;
+            if(!checkArg(Config.Get(path + "/token", out string token, "credentials"), "No token found in config.")) return null;
             var hasCustomFallbackMessage = Config.DoesPropertyExist(path + "/fallbackMessage");
             string fallbackMessage = "";
             if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);

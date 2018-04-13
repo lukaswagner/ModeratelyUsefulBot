@@ -18,11 +18,11 @@ namespace ModeratelyUsefulBot
         static RedditCommands()
         {
             var webAgent = new BotWebAgent(
-                Config.GetDefault("reddit/auth/username", ""),
-                Config.GetDefault("reddit/auth/password", ""),
-                Config.GetDefault("reddit/auth/clientId", ""),
-                Config.GetDefault("reddit/auth/clientSecret", ""),
-                Config.GetDefault("reddit/auth/redirectUri", ""));
+                Config.GetDefault("reddit/auth/username", "", "credentials"),
+                Config.GetDefault("reddit/auth/password", "", "credentials"),
+                Config.GetDefault("reddit/auth/clientId", "", "credentials"),
+                Config.GetDefault("reddit/auth/clientSecret", "", "credentials"),
+                Config.GetDefault("reddit/auth/redirectUri", "", "credentials"));
             _reddit = new Reddit(webAgent, false);
             _dankmemes = _reddit.GetSubreddit("/r/dankmemes");
             // check number of pinned posts

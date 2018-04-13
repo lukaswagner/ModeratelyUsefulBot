@@ -1,2 +1,3 @@
-data
+data/credentials.xml
+data/debugCredentials.xml
 log

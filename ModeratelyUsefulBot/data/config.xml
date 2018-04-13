@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<config>
+    <bots>
+        <!-- Moderately Useful Bot -->
+        <bot>
+            <logName>ModUsef</logName>
+            <fallbackMessage>Sorry, but I don't know how to do that. I'm just moderately useful, after all.</fallbackMessage>
+            <commands>
+                <command>
+                    <name>ping</name>
+                    <action>MiscCommands.Ping</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
+                    <name>playlist</name>
+                    <action>SpotifyCommands.SendPlaylistStats</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
+                    <name>meme</name>
+                    <action>RedditCommands.GetRandomMeme</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>log</name>
+                    <action>MiscCommands.GetLog</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>exit</name>
+                    <action>MiscCommands.Exit</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>restart</name>
+                    <action>MiscCommands.Restart</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>adminonly</name>
+                    <action>MiscCommands.SetAdminOnly</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>start</name>
+                    <action>MiscCommands.Help</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
+                    <name>help</name>
+                    <action>MiscCommands.Help</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+            </commands>
+            <admins>
+                <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->
+                <admin>168587717</admin>
+            </admins>
+        </bot>
+    </bots>
+    <spotify>
+        <!-- example shared playlist -->
+        <playlist>
+            <user>1155295024</user>
+            <id>4rn5S00IB3kTbgtO1GSzD8</id>
+        </playlist>
+    </spotify>
+    <log>
+        <consoleLevel>Info</consoleLevel>
+        <fileLevel>Info</fileLevel>
+        <logTimes>true</logTimes>
+    </log>
+</config>
