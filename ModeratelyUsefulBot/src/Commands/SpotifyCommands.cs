@@ -70,6 +70,8 @@ namespace ModeratelyUsefulBot
                 _spotify.AccessToken = _token.AccessToken;
         }
 
+        [Command(Name = "Playlist statistics", ShortDescription = "show spotify playlist stats", Description = "Shows statistics for the spotify playlist.")]
+        [Argument(Name = "Statistics select", Type = typeof(string), Description = "Use \"full\" to retrieve additional statistics.", Optional = true)]
         internal static void SendPlaylistStats(Bot bot, Message message, IEnumerable<string> arguments)
         {
             // check for valid settings

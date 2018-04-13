@@ -35,6 +35,7 @@ namespace ModeratelyUsefulBot
             Log.Info(_tag, "Reddit API setup done.");
         }
 
+        [Command(Name = "Get random meme", ShortDescription = "get random meme", Description = "Posts a random meme from the first page of /r/dankmemes.")]
         internal static void GetRandomMeme(Bot bot, Message message, IEnumerable<string> arguments)
         {
             int offset = _random.Next(25);
