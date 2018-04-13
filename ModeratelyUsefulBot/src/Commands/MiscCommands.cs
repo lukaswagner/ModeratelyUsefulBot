@@ -119,10 +119,10 @@ namespace ModeratelyUsefulBot
 
             var argumentAttributes = Attribute.GetCustomAttributes(command.Action.Method, typeof(ArgumentAttribute)).Select(a => a as ArgumentAttribute).Where(a => a != null);
             if (argumentAttributes.Count() == 0)
-                result += "\n\nThis command takes no attributes.";
+                result += "\n\nThis command takes no arguments.";
             else
             {
-                result += "\n\nAttributes:";
+                result += "\n\nArguments:";
                 foreach (var argumentAttribute in argumentAttributes)
                 {
                     result += "\n- " + argumentAttribute.Name + "\n  ";
