@@ -40,6 +40,11 @@
                     <action>MiscCommands.Help</action>
                     <adminOnly>false</adminOnly>
                 </command>
+                <command>
+                    <name>logalot</name>
+                    <action>MiscCommands.LogALot</action>
+                    <adminOnly>false</adminOnly>
+                </command>
             </commands>
             <admins>
                 <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->

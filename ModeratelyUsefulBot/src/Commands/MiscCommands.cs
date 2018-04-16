@@ -29,14 +29,79 @@ namespace ModeratelyUsefulBot
             var fileName = Log.FilePath.Split('/').Last();
             using (var fs = new FileStream(Log.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 if (arguments.Count() == 0 || arguments.First().ToLower() == "print")
+                {
+                    const int maxLength = 4096;
+                    var header = "Current log file (" + fileName.Replace("_", "\\_") + "):\n";
+                    const string codeHeader = "```\n";
+                    const string codeFooter = "\n```";
+                    const string partText = "(part {0} of {1})";
+
+                    var remainingLength = maxLength - header.Length - codeHeader.Length - codeFooter.Length;
+
                     using (var sr = new StreamReader(fs))
-                        bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Current log file (" + fileName.Replace("_", "\\_") + "):\n```\n" + sr.ReadToEnd() + "\n```", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                    {
+                        var log = sr.ReadToEnd();
+                        if(log.Length < remainingLength)
+                            bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + log + codeFooter, Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                        else
+                        {
+                            sr.BaseStream.Position = 0;
+                            sr.DiscardBufferedData();
+                            // assume the part count will not exceed 999999
+                            remainingLength -= partText.Length + 6;
+
+                            var parts = new List<List<string>> { new List<string>() };
+                            var curLength = 0;
+                            var curPart = parts.Last();
+                            string line;
+
+                            while(!sr.EndOfStream)
+                            {
+                                line = sr.ReadLine();
+                                if(curLength + curPart.Count - 1 + line.Length < remainingLength)
+                                {
+                                    curLength += line.Length;
+                                    curPart.Add(line);
+                                }
+                                else
+                                {
+                                    curLength = line.Length;
+                                    curPart = new List<string> { line };
+                                    parts.Add(curPart);
+                                }
+                            }
+                            
+                            var partCount = parts.Count;
+                            for (var i = 0; i < partCount; i++)
+                                bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + String.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
+                        }
+                    }
+
+
+                }
+                    
                 else if (arguments.First().ToLower() == "file")
                 {
                     bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
                 }
                 else
                     bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use \"print\" or \"file.\"");
+        }
+
+        [Command(Name = "Log a lot", ShortDescription = "logs a lot of things", Description = "Logs a given amount of messages with a given length each. Used for debugging.")]
+        [Argument(Name = "Number of logs", Type = typeof(int), Description = "Number of messages to log.", Optional = true, DefaultValue = "1")]
+        [Argument(Name = "Number of characters", Type = typeof(int), Description = "Number of characters per log.", Optional = true, DefaultValue = "10")]
+        internal static void LogALot(Bot bot, Message message, IEnumerable<string> arguments)
+        {
+            var logs = 1;
+            var charsPerLog = 10;
+            if (arguments.Count() > 0)
+                int.TryParse(arguments.First(), out logs);
+            if (arguments.Count() > 1)
+                int.TryParse(arguments.Skip(1).First(), out charsPerLog);
+            
+            for (int i = 0; i < logs; i++)
+                Log.Info(bot.Name, new string((char)0x262d, charsPerLog));
         }
 
         [Command(Name = "Exit", ShortDescription = "stop the bot", Description = "Stops the bot.")]
