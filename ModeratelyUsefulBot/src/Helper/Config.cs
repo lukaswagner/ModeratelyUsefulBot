@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Text;
 using System.Xml;
+using System.Xml.Schema;
 
 namespace ModeratelyUsefulBot
 {
@@ -14,38 +16,73 @@ namespace ModeratelyUsefulBot
         private const string _defaultDoc = "config";
         private const string _dir = "data/";
         private const char _slash = '/';
+        private const string _namespacePrefix = "a";
 #if DEBUG
         private static Dictionary<string, string> _files = new Dictionary<string, string> { { "config", _dir + "debugConfig.xml" }, { "credentials", _dir + "debugCredentials.xml" } };
 #else
         private static Dictionary<string, string> _files = new Dictionary<string, string> { { "config", _dir + "config.xml" }, { "credentials", _dir + "credentials.xml" } };
 #endif
-        private static Dictionary<string, XmlDocument> _docs = new Dictionary<string, XmlDocument>();
+        private static Dictionary<string, (XmlDocument, XmlNamespaceManager)> _docs = new Dictionary<string, (XmlDocument, XmlNamespaceManager)>();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static Config()
         {
+            bool success = true;
             foreach(var file in _files)
             {
+                var events = new List<ValidationEventArgs>();
+
+                var settings = new XmlReaderSettings();
+                settings.Schemas.Add(file.Key, _dir + file.Key + ".xsd");
+                settings.ValidationType = ValidationType.Schema;
+                settings.ValidationEventHandler += (s, e) => events.Add(e);
+
                 var doc = new XmlDocument();
-                doc.Load(file.Value);
-                _docs.Add(file.Key, doc);
+                XmlReader reader = null;
+                try
+                {
+                    reader = XmlReader.Create(file.Value, settings);
+                }
+                catch (Exception) { }
+                doc.Load(reader);
+                var nsmgr = new XmlNamespaceManager(doc.NameTable);
+                nsmgr.AddNamespace(_namespacePrefix, file.Key);
+
+                if(events.Count() > 0)
+                {
+                    var message = string.Join('\n', events.Select(e => (e.Severity == XmlSeverityType.Warning ? "Warning" : "Error") + " at line " + e.Exception.LineNumber + ": " + e.Message));
+                    Console.WriteLine("Invalid XML: " + file.Value);
+                    Console.WriteLine(message);
+                    success = false;
+                }
+
+                _docs.Add(file.Key, (doc, nsmgr));
+            }
+
+            if (!success)
+            {
+                Console.WriteLine("Problems with config files found. Press any key to exit.");
+                Console.ReadKey();
+                Environment.Exit(-1);
             }
         }
 
-        public static bool DoesPropertyExist(string property, string file = _defaultDoc) => _docs.TryGetValue(file, out var doc) && doc.SelectSingleNode(_slash + file + _slash + property) != null;
+        private static XmlNode _selectSingleNode((XmlDocument, XmlNamespaceManager) pair, string path) => pair.Item1.SelectSingleNode(path.Replace(_slash.ToString(), _slash + _namespacePrefix + ':'), pair.Item2);
+
+        public static bool DoesPropertyExist(string property, string file = _defaultDoc) => _docs.TryGetValue(file, out var pair) && _selectSingleNode(pair, _slash + file + _slash + property) != null;
 
         public static bool Get<T>(string property, out T value, string file = _defaultDoc)
         {
             value = default(T);
             var valueString = "";
 
-            if (!_docs.TryGetValue(file, out var doc))
+            if (!_docs.TryGetValue(file, out var pair))
             {
                 Log.Warn(_tag, "Could not find file: " + file);
                 return false;
             }
 
-            var node = doc.SelectSingleNode(_slash + file + _slash + property);
+            var node = _selectSingleNode(pair, _slash + file + _slash + property);
 
             if (node == null)
             {
@@ -88,13 +125,13 @@ namespace ModeratelyUsefulBot
 
         public static bool Set(string property, object value, string file = _defaultDoc)
         {
-            if (!_docs.TryGetValue(file, out var doc))
+            if (!_docs.TryGetValue(file, out var pair))
             {
                 Log.Warn(_tag, "Could not find file: " + file);
                 return false;
             }
 
-            if(!_files.TryGetValue(file, out var fileName))
+            if (!_files.TryGetValue(file, out var fileName))
             {
                 Log.Warn(_tag, "Could not find file location for file: " + file);
                 return false;
@@ -102,13 +139,13 @@ namespace ModeratelyUsefulBot
 
             var value_string = value.ToString();
 
-            var node = _traveseOrBuildHierarchy(doc, _slash + file + _slash + property);
+            var node = _traveseOrBuildHierarchy(pair, _slash + file + _slash + property);
 
             node.InnerText = value_string;
 
             try
             {
-                File.WriteAllText(fileName, Beautify(doc));
+                File.WriteAllText(fileName, Beautify(pair.Item1));
             }
             catch (Exception ex)
             {
@@ -131,15 +168,16 @@ namespace ModeratelyUsefulBot
             return true;
         }
 
-        private static XmlNode _traveseOrBuildHierarchy(XmlDocument doc, string path)
+        private static XmlNode _traveseOrBuildHierarchy((XmlDocument, XmlNamespaceManager) pair, string path)
         {
             var split = path.Trim('/').Split('/');
 
+            var doc = pair.Item1;
             var parent = doc as XmlNode;
 
             foreach (var node in split)
             {
-                var current = parent.SelectSingleNode(node);
+                var current = parent.SelectSingleNode(_namespacePrefix + ":" + node, pair.Item2);
                 if (current == null)
                     current = parent.AppendChild(doc.CreateElement(node));
 
