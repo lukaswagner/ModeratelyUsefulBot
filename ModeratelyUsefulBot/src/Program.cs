@@ -8,7 +8,7 @@ namespace ModeratelyUsefulBot
     class Program
     {
         private static string _tag = "Main";
-        private static List<Bot> _bots;
+        internal static List<Bot> Bots;
         private static Timer _timer;
         private static bool _running = true;
         private static AutoResetEvent _exitHandle = new AutoResetEvent(false);
@@ -31,20 +31,20 @@ namespace ModeratelyUsefulBot
 
         private static void _startBots()
         {
-            _bots = new List<Bot>();
+            Bots = new List<Bot>();
             var botIndex = 1;
             while (Config.DoesPropertyExist("bots/bot[" + botIndex + "]"))
             {
                 var bot = Bot.CreateBot(botIndex++);
                 if (bot != null)
-                    _bots.Add(bot);
+                    Bots.Add(bot);
             }
         }
 
         private static void _runTimedCommands(object state)
         {
             Log.Debug(_tag, "Running timed commands.");
-            _bots.ForEach(b => b.RunTimedCommands());
+            Bots.ForEach(b => b.RunTimedCommands());
         }
 
         private static void _checkConsoleInput()
@@ -85,8 +85,8 @@ namespace ModeratelyUsefulBot
             // always wait a bit to ensure the bot has confirmed receiving the message
             await Task.Delay(500);
 
-            foreach (var bot in _bots)
-                bot.StopReceiving();
+            foreach (var bot in Bots)
+                bot.BotClient.StopReceiving();
 
             await Task.Delay(secondsUntilExit * 1000);
 

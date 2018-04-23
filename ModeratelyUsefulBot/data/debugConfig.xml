@@ -1,34 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <config xmlns="config">
     <bots>
-        <!-- Yet Another Test Bot -->
+        <!-- Yet Another Test Bot - in this example, this is a feature bot -->
         <bot>
             <logName>YATB</logName>
             <commands>
                 <command>
-                    <name>ping</name>
-                    <action>MiscCommands.Ping</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-                <command>
                     <name>meme</name>
                     <action>RedditCommands.GetRandomMeme</action>
                     <adminOnly>true</adminOnly>
-                </command>
-                <command>
-                    <name>log</name>
-                    <action>MiscCommands.GetLog</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-                <command>
-                    <name>exit</name>
-                    <action>MiscCommands.Exit</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-                <command>
-                    <name>adminonly</name>
-                    <action>MiscCommands.SetAdminOnly</action>
-                    <adminOnly>false</adminOnly>
                 </command>
                 <command>
                     <name>start</name>
@@ -40,27 +20,73 @@
                     <action>MiscCommands.Help</action>
                     <adminOnly>false</adminOnly>
                 </command>
+            </commands>
+            <admins>
+                <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->
+                <admin>1685877170</admin>
+            </admins>
+        </bot>
+        <!-- Additional Test Bot - in this example, this is a management bot -->
+        <bot>
+            <logName>AddTest</logName>
+            <commands>
+                <!-- basic commands -->
+                <command>
+                    <name>ping</name>
+                    <action>MiscCommands.Ping</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>help</name>
+                    <action>MiscCommands.Help</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
+                    <name>log</name>
+                    <action>MiscCommands.GetLog</action>
+                    <adminOnly>true</adminOnly>
+                </command>
                 <command>
                     <name>logalot</name>
                     <action>MiscCommands.LogALot</action>
-                    <adminOnly>false</adminOnly>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <!-- management commands -->
+                <command>
+                    <name>exit</name>
+                    <action>ManagementCommands.Exit</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>restart</name>
+                    <action>ManagementCommands.Restart</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>botlist</name>
+                    <action>ManagementCommands.BotList</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>start</name>
+                    <action>ManagementCommands.Start</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>stop</name>
+                    <action>ManagementCommands.Stop</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>adminonly</name>
+                    <action>ManagementCommands.SetAdminOnly</action>
+                    <adminOnly>true</adminOnly>
                 </command>
             </commands>
             <admins>
                 <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->
                 <admin>168587717</admin>
             </admins>
-        </bot>
-        <!-- Additional Test Bot -->
-        <bot>
-            <logName>AddTest</logName>
-            <commands>
-                <command>
-                    <name>ping</name>
-                    <action>MiscCommands.Ping</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-            </commands>
         </bot>
     </bots>
     <spotify>

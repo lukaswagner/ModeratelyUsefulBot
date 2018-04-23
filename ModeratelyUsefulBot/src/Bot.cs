@@ -16,6 +16,7 @@ namespace ModeratelyUsefulBot
         private Command _fallbackCommand;
         public List<int> Admins;
         internal string Name;
+        internal string Tag;
 
         internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
@@ -29,9 +30,10 @@ namespace ModeratelyUsefulBot
 
             Admins = admins;
 
-            Name = name == "" ? _tag : (_tag + " (" + name + ")");
-            if (Name.Length > Log.TagLength)
-                Name = Name.Substring(0, Log.TagLength);
+            Name = name;
+            Tag = name == "" ? _tag : (_tag + " (" + name + ")");
+            if (Tag.Length > Log.TagLength)
+                Tag = Tag.Substring(0, Log.TagLength);
 
             BotClient.OnUpdate += _onUpdate;
             BotClient.StartReceiving();
@@ -89,12 +91,10 @@ namespace ModeratelyUsefulBot
                 return new Bot(token, commands, timedCommands, admins, logName);
         }
 
-        internal void StopReceiving() => BotClient?.StopReceiving();
-
         private async void _check()
         {
             var me = await BotClient.GetMeAsync();
-            Log.Info(Name, "Hello! My name is " + me.FirstName + ".");
+            Log.Info(Tag, "Hello! My name is " + me.FirstName + ".");
         }
 
         private void _onUpdate(object sender, UpdateEventArgs e)
@@ -103,7 +103,7 @@ namespace ModeratelyUsefulBot
             if (type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
             {
                 var message = e.Update.Message;
-                Log.Info(Name, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
+                Log.Info(Tag, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
                 if (message.Text.StartsWith('/'))
                     _reactToCommand(message);
             }
@@ -143,7 +143,7 @@ namespace ModeratelyUsefulBot
             }
             catch (Exception ex)
             {
-                Log.Error(Name, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
+                Log.Error(Tag, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
                 BotClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
         }

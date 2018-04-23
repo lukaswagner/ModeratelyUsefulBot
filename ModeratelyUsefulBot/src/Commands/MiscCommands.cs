@@ -101,54 +101,7 @@ namespace ModeratelyUsefulBot
                 int.TryParse(arguments.Skip(1).First(), out charsPerLog);
             
             for (int i = 0; i < logs; i++)
-                Log.Info(bot.Name, new string((char)0x262d, charsPerLog));
-        }
-
-        [Command(Name = "Exit", ShortDescription = "stop the bot", Description = "Stops the bot.")]
-        [Argument(Name = "Seconds until exit", Type = typeof(int), Description = "Delay until the bot is stopped.", Optional = true, DefaultValue = "5")]
-        internal static void Exit(Bot bot, Message message, IEnumerable<string> arguments)
-        {
-            _exit(bot, message, arguments, false);
-        }
-
-        [Command(Name = "Restart", ShortDescription = "restart the bot", Description = "Restarts the bot.")]
-        [Argument(Name = "Seconds until restart", Type = typeof(int), Description = "Delay until the bot is restarted.", Optional = true, DefaultValue = "5")]
-        internal static void Restart(Bot bot, Message message, IEnumerable<string> arguments)
-        {
-            _exit(bot, message, arguments, true);
-        }
-
-        private static void _exit(Bot bot, Message message, IEnumerable<string> arguments, bool requestRestart)
-        {
-            if (arguments.Count() == 0 || !int.TryParse(arguments.First(), out int secondsUntilExit))
-                secondsUntilExit = (int)((Action<int, bool>)Program.Exit).Method.GetParameters().First().DefaultValue;
-
-            bot.BotClient.SendTextMessageAsync(message.Chat.Id, (requestRestart ? "Restarting" : "Shutting down") + " in " + secondsUntilExit + " seconds.");
-            Program.Exit(secondsUntilExit, requestRestart);
-        }
-
-        [Command(Name = "Set AdminOnly", ShortDescription = "set who can use a command", Description = "Configures a comamnd to be available to all users or to admins only.")]
-        [Argument(Name = "Command", Type = typeof(string), Description = "Name of the command, with or without the leading slash.")]
-        [Argument(Name = "AdminOnly", Type = typeof(bool), Description = "If the command should be available to admins only (false - all users, true - admins only).")]
-        internal static void SetAdminOnly(Bot bot, Message message, IEnumerable<string> arguments)
-        {
-            if (arguments.Count() < 2)
-            {
-                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a command and a boolean.");
-                return;
-            }
-            if (!bot.Commands.TryGetValue(arguments.First().StartsWith('/') ? arguments.First() : "/" + arguments.First(), out var command))
-            {
-                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find command.");
-                return;
-            }
-            if (!bool.TryParse(arguments.Skip(1).First(), out var adminOnly))
-            {
-                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not parse boolean.");
-                return;
-            }
-            command.AdminOnly = adminOnly;
-            bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + command.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
+                Log.Info(bot.Tag, new string((char)0x262d, charsPerLog));
         }
 
         [Command(Name = "Help", ShortDescription = "get help about available commands", Description = "Shows a list of available commands, or information about a given command.")]
