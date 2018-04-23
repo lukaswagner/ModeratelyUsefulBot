@@ -141,7 +141,7 @@ namespace ModeratelyUsefulBot
                 return;
             }
             command.AdminOnly = adminOnly;
-            bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + command.Name + " of bot " + target.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
+            bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + string.Join(" aka ",  command.Names) + " of bot " + target.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
         }
 
         private static bool _tryGetBot(Bot bot, Message message, string name, out Bot target)

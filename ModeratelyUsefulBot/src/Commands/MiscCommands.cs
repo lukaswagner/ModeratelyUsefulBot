@@ -115,9 +115,9 @@ namespace ModeratelyUsefulBot
         {
             var isAdmin = bot.Admins.Contains(user);
             var result = "These are the commands available to you. Use /help followed by a command for more information on it.\n";
-            foreach (var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin))
+            foreach (var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin).Distinct())
             {
-                result += "\n" + command.Name;
+                result += "\n" + string.Join(" or ", command.Names);
                 if (Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute)
                     result += " - " + commandAttribute.ShortDescription;
             }

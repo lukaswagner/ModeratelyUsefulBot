@@ -18,7 +18,16 @@
                                                     <xs:element maxOccurs="unbounded" name="command">
                                                         <xs:complexType>
                                                             <xs:sequence>
-                                                                <xs:element name="name" type="xs:string" />
+                                                                <xs:choice>
+                                                                    <xs:element name="name" type="xs:string" />
+                                                                    <xs:element name="names">
+                                                                        <xs:complexType>
+                                                                            <xs:sequence>
+                                                                                <xs:element maxOccurs="unbounded" name="name" type="xs:string" />
+                                                                            </xs:sequence>
+                                                                        </xs:complexType>
+                                                                    </xs:element>
+                                                                </xs:choice>
                                                                 <xs:element name="action" type="xs:string" />
                                                                 <xs:element name="adminOnly" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
                                                             </xs:sequence>

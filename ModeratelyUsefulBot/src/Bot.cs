@@ -21,9 +21,16 @@ namespace ModeratelyUsefulBot
         internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
             BotClient = new TelegramBotClient(token);
+
+            Commands = new Dictionary<string, Command>();
+            foreach (var command in commands)
+                foreach (var commandName in command.Names)
+                {
+                    command.Bot = this;
+                    Commands.Add(commandName, command);
+                }
             
-            Commands = commands.ToDictionary(cmd => cmd.Name, cmd => { cmd.Bot = this; return cmd; });
-            _fallbackCommand = new Command("", (c, m, a) => c.BotClient.SendTextMessageAsync(m.Chat.Id, fallbackMessage), this);
+            _fallbackCommand = new Command(null, (c, m, a) => c.BotClient.SendTextMessageAsync(m.Chat.Id, fallbackMessage), this);
 
             _timedCommands = timedCommands;
             _timedCommands.ForEach(tc => tc.Bot = this);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Telegram.Bot.Types;
@@ -11,14 +12,14 @@ namespace ModeratelyUsefulBot
         internal Action<Bot, Message, IEnumerable<string>> Action;
 
         private static string _tag = "Command";
-        public string Name { private set; get; }
+        public IEnumerable<string> Names { private set; get; }
         public Bot Bot;
         public bool AdminOnly;
 
-        public Command(string name, Action<Bot, Message, IEnumerable<string>> action, Bot bot = null, bool adminOnly = false)
+        public Command(IEnumerable<string> names, Action<Bot, Message, IEnumerable<string>> action, Bot bot = null, bool adminOnly = false)
         {
             Bot = bot;
-            Name = name;
+            Names = names;
             Action = action;
             AdminOnly = adminOnly;
         }
@@ -35,7 +36,19 @@ namespace ModeratelyUsefulBot
             }
 
             if (!checkArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
-            if (!checkArg(Config.Get(path + "/name", out string name), "No name found in config.")) return null;
+            if (!checkArg(Config.DoesPropertyExist(path + "/name") || Config.DoesPropertyExist(path + "/names"), "No name found in config.")) return null;
+
+            List<string> names = new List<string>();
+            if (Config.DoesPropertyExist(path + "/name") && Config.Get(path + "/name", out string name))
+                names.Add(name);
+            else
+            {
+                var nameIndex = 1;
+                while(Config.DoesPropertyExist(path + "/names/name[" + nameIndex + "]"))
+                    if (Config.Get(path + "/names/name[" + nameIndex++ + "]", out name))
+                        names.Add(name);
+            }
+
             if (!checkArg(Config.Get(path + "/action", out string actionString), "No action found in config.")) return null;
             var adminOnly = Config.GetDefault(path + "/adminOnly", false);
 
@@ -48,7 +61,7 @@ namespace ModeratelyUsefulBot
             if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
             var action = (Action<Bot, Message, IEnumerable<string>>)Delegate.CreateDelegate(typeof(Action<Bot, Message, IEnumerable<string>>), actionMethod);
 
-            return new Command("/" + name, action, adminOnly: adminOnly);
+            return new Command(names.Select(n => "/" + n), action, adminOnly: adminOnly);
         }
 
         public void Invoke(Message message, IEnumerable<string> arguments)

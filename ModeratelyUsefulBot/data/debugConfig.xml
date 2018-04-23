@@ -4,7 +4,7 @@
         <!-- Yet Another Test Bot - in this example, this is a feature bot -->
         <bot>
             <name>YATB</name>
-            <autostart>false</autostart>
+            <autostart>true</autostart>
             <commands>
                 <command>
                     <name>meme</name>
@@ -12,12 +12,10 @@
                     <adminOnly>true</adminOnly>
                 </command>
                 <command>
-                    <name>start</name>
-                    <action>MiscCommands.Help</action>
-                    <adminOnly>false</adminOnly>
-                </command>
-                <command>
-                    <name>help</name>
+                    <names>
+                        <name>start</name>
+                        <name>help</name>
+                    </names>
                     <action>MiscCommands.Help</action>
                     <adminOnly>false</adminOnly>
                 </command>
