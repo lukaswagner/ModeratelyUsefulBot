@@ -9,7 +9,8 @@
                             <xs:element maxOccurs="unbounded" name="bot">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="logName" type="xs:string" />
+                                        <xs:element name="name" type="xs:string" />
+                                        <xs:element name="autostart" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
                                         <xs:element name="fallbackMessage" type="xs:string" minOccurs="0" maxOccurs="1"/>
                                         <xs:element name="commands">
                                             <xs:complexType>

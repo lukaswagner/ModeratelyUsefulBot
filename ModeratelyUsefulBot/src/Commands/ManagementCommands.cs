@@ -41,24 +41,22 @@ namespace ModeratelyUsefulBot
 
             var botList = "";
 
-            if(grouped.TryGetValue(true, out var active) && active.Count() > 0)
+            void print(IEnumerable<Bot> l)
+            {
+                foreach (var b in l)
+                    botList += "\n" + b.Name + " - " + b.BotClient.GetMeAsync().GetAwaiter().GetResult().FirstName;
+            }
+
+            if (grouped.TryGetValue(true, out var active) && active.Count() > 0)
             {
                 botList += "\n\nActive bots:";
-                foreach (var activeBot in active)
-                {
-                    var me = activeBot.BotClient.GetMeAsync().GetAwaiter().GetResult();
-                    botList += "\n" + activeBot.Name + " - " + me.FirstName;
-                }
+                print(active);
             }
 
             if (grouped.TryGetValue(false, out var inactive) && inactive.Count() > 0)
             {
                 botList += "\n\nInactive bots:";
-                foreach (var inactiveBot in inactive)
-                {
-                    var me = inactiveBot.BotClient.GetMeAsync().GetAwaiter().GetResult();
-                    botList += inactiveBot.Name + " - " + me.FirstName;
-                }
+                print(inactive);
             }
 
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, botList == "" ? "No bots avaiable (But who are you talking to?)." : "These are the available bots:" + botList);

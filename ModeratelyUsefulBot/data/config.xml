@@ -3,7 +3,7 @@
     <bots>
         <!-- Moderately Useful Bot -->
         <bot>
-            <logName>ModUsef</logName>
+            <name>ModUsef</name>
             <fallbackMessage>Sorry, but I don't know how to do that. I'm just moderately useful, after all.</fallbackMessage>
             <commands>
                 <command>

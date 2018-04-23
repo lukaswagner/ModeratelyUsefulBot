@@ -3,7 +3,8 @@
     <bots>
         <!-- Yet Another Test Bot - in this example, this is a feature bot -->
         <bot>
-            <logName>YATB</logName>
+            <name>YATB</name>
+            <autostart>false</autostart>
             <commands>
                 <command>
                     <name>meme</name>
@@ -28,7 +29,8 @@
         </bot>
         <!-- Additional Test Bot - in this example, this is a management bot -->
         <bot>
-            <logName>AddTest</logName>
+            <name>AddTest</name>
+            <autostart>true</autostart>
             <commands>
                 <!-- basic commands -->
                 <command>

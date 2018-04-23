@@ -36,7 +36,6 @@ namespace ModeratelyUsefulBot
                 Tag = Tag.Substring(0, Log.TagLength);
 
             BotClient.OnUpdate += _onUpdate;
-            BotClient.StartReceiving();
 
             _check();
         }
@@ -57,7 +56,7 @@ namespace ModeratelyUsefulBot
             var hasCustomFallbackMessage = Config.DoesPropertyExist(path + "/fallbackMessage");
             string fallbackMessage = "";
             if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);
-            string logName = Config.GetDefault(path + "/logName", "");
+            string name = Config.GetDefault(path + "/name", "");
 
             var admins = new List<int>();
             if(Config.DoesPropertyExist(path + "/admins"))
@@ -85,16 +84,20 @@ namespace ModeratelyUsefulBot
                     timedCommands.Add(timedCommand);
             }
 
-            if (hasCustomFallbackMessage)
-                return new Bot(token, commands, timedCommands, admins, logName, fallbackMessage);
-            else
-                return new Bot(token, commands, timedCommands, admins, logName);
+            var bot = hasCustomFallbackMessage ? 
+                new Bot(token, commands, timedCommands, admins, name, fallbackMessage): 
+                new Bot(token, commands, timedCommands, admins, name);
+
+            if (Config.GetDefault(path + "/autostart", true))
+                bot.BotClient.StartReceiving();
+
+            return bot;
         }
 
         private async void _check()
         {
             var me = await BotClient.GetMeAsync();
-            Log.Info(Tag, "Hello! My name is " + me.FirstName + ".");
+            Log.Info(Tag, "Hello! My name is " + me.FirstName + ". I am currently " + (BotClient.IsReceiving ? "enabled." : "disabled."));
         }
 
         private void _onUpdate(object sender, UpdateEventArgs e)
