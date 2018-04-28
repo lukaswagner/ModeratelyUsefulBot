@@ -9,19 +9,21 @@ namespace ModeratelyUsefulBot
 {
     class Command
     {
-        internal Action<Bot, Message, IEnumerable<string>> Action;
-
         private static string _tag = "Command";
-        public IEnumerable<string> Names { private set; get; }
-        public Bot Bot;
-        public bool AdminOnly;
 
-        public Command(IEnumerable<string> names, Action<Bot, Message, IEnumerable<string>> action, Bot bot = null, bool adminOnly = false)
+        internal Action<Bot, Message, IEnumerable<string>> Action;
+        internal IEnumerable<string> Names;
+        internal Bot Bot;
+        internal bool AdminOnly;
+        internal Dictionary<string, object> Parameters;
+
+        public Command(IEnumerable<string> names, Action<Bot, Message, IEnumerable<string>> action, Bot bot = null, bool adminOnly = false, Dictionary<string, object> parameters = null)
         {
             Bot = bot;
             Names = names;
             Action = action;
             AdminOnly = adminOnly;
+            Parameters = parameters ?? new Dictionary<string, object>();
         }
 
         internal static Command CreateCommand(string botPath, int index)
@@ -61,7 +63,63 @@ namespace ModeratelyUsefulBot
             if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
             var action = (Action<Bot, Message, IEnumerable<string>>)Delegate.CreateDelegate(typeof(Action<Bot, Message, IEnumerable<string>>), actionMethod);
 
-            return new Command(names.Select(n => "/" + n), action, adminOnly: adminOnly);
+            var parameters = _parseCommandParameters(path);
+
+            return new Command(names.Select(n => "/" + n), action, adminOnly: adminOnly, parameters: parameters);
+        }
+
+        private static Dictionary<string, object> _parseCommandParameters(string commandPath)
+        {
+            if (!Config.DoesPropertyExist(commandPath + "/parameters"))
+                return null;
+
+            var result = new Dictionary<string, object>();
+            var parameterIndex = 0;
+
+            bool checkArg(bool success, string message)
+            {
+                if (!success)
+                    Log.Warn(_tag, "Could not parse command parameters for command " + commandPath + ". Problem with parameter " + parameterIndex + ": " + message);
+                return success;
+            }
+
+            string parameterPath;
+            while((parameterPath = commandPath + "/parameters/parameter[" + ++parameterIndex + "]").Length > 0 && Config.DoesPropertyExist(parameterPath))
+            {
+                if (!checkArg(Config.Get(parameterPath + "/name", out string name), "Could not read parameter name. Skipping parameter.") ||
+                    !checkArg(Config.Get(parameterPath + "/type", out string type), "Could not read parameter type. Skipping parameter.") ||
+                    !checkArg(Config.Get(parameterPath + "/value", out string value), "Could not read parameter value. Skipping parameter."))
+                    continue;
+
+                object parsedValue;
+                switch (type.ToLower())
+                {
+                    case "string":
+                        parsedValue = value;
+                        break;
+                    case "int":
+                    case "integer":
+                        if (!checkArg(int.TryParse(value, out int intValue), "Could not parse parameter value as integer. Skipping parameter."))
+                            continue;
+                        else
+                            parsedValue = intValue;
+                        break;
+                    case "bool":
+                    case "boolean":
+                        if (!checkArg(bool.TryParse(value, out bool boolValue), "Could not parse parameter value as boolean. Skipping parameter."))
+                            continue;
+                        else
+                            parsedValue = boolValue;
+                        break;
+                    default:
+                        checkArg(false, "Unknown parameter type. Custom parameters should be passed as strings. Skipping parameter.");
+                        continue;
+                }
+
+                result.Add(name, parsedValue);
+            }
+
+            return result;
         }
 
         public void Invoke(Message message, IEnumerable<string> arguments)

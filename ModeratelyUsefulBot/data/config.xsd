@@ -30,6 +30,21 @@
                                                                 </xs:choice>
                                                                 <xs:element name="action" type="xs:string" />
                                                                 <xs:element name="adminOnly" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="parameters" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="parameter" maxOccurs="unbounded">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="name" type="xs:string"/>
+                                                                                        <xs:element name="type" type="xs:string"/>
+                                                                                        <xs:element name="value" type="xs:string"/>
+                                                                                    </xs:sequence>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
                                                             </xs:sequence>
                                                         </xs:complexType>
                                                     </xs:element>
@@ -43,20 +58,6 @@
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
-                <xs:element name="spotify">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="playlist">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="user" type="xs:string" />
-                                        <xs:element name="id" type="xs:string" />
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
