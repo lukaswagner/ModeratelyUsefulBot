@@ -12,6 +12,11 @@
                     <adminOnly>true</adminOnly>
                 </command>
                 <command>
+                    <name>playlist</name>
+                    <action>SpotifyCommands.SendPlaylistStats</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
                     <names>
                         <name>start</name>
                         <name>help</name>

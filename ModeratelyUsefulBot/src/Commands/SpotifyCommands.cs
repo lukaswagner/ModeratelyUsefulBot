@@ -71,7 +71,7 @@ namespace ModeratelyUsefulBot
         }
 
         [Command(Name = "Playlist statistics", ShortDescription = "show spotify playlist stats", Description = "Shows statistics for the spotify playlist.")]
-        [Argument(Name = "Statistics select", Type = typeof(string), Description = "Use \"full\" to retrieve additional statistics.", Optional = true)]
+        [Argument(Name = "Statistics select", Type = typeof(string), Description = "Use \"tracks\", \"time\", \"popularity\" or \"full\" to select which statistics are calculated.", Optional = true, DefaultValue = "tracks")]
         internal static void SendPlaylistStats(Bot bot, Message message, IEnumerable<string> arguments)
         {
             // check for valid settings
@@ -105,7 +105,34 @@ namespace ModeratelyUsefulBot
             if(_cachedPlaylistOutdated())
                 _loadPlaylist();
 
-            var answer = (arguments.Count() > 0 && arguments.First().ToLower() == "full") ? _getFullStats() : _getBasicStats();
+            string answer;
+
+            if (arguments.Count() == 0)
+                answer = _getTrackCount();
+            else
+                switch (arguments.First().ToLower())
+                {
+                    case "tracks":
+                    case "songs":
+                    case "count":
+                        answer = _getTrackCount();
+                        break;
+                    case "duration":
+                    case "time":
+                        answer = _getDuration();
+                        break;
+                    case "popularity":
+                    case "scores":
+                        answer = _getPopularity();
+                        break;
+                    case "full":
+                    case "all":
+                        answer = _getTrackCount() + "\n\n" + _getDuration() + "\n\n" + _getPopularity();
+                        break;
+                    default:
+                        answer = "Unknown argument. Use \"tracks\", \"time\", \"popularity\" or \"full\".";
+                        break;
+                }
 
             placeholderMessage.Wait();
             bot.BotClient.EditMessageTextAsync(message.Chat.Id, placeholderMessage.Result.MessageId, answer);
@@ -138,7 +165,7 @@ namespace ModeratelyUsefulBot
             };
         }
 
-        private static string _getBasicStats()
+        private static string _getTrackCount()
         {
             if (_cachedPlaylist.Counts == null)
                 _calculateBasicStats();
@@ -158,20 +185,27 @@ namespace ModeratelyUsefulBot
                 .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Count());
         }
 
-        private static string _getFullStats()
+        private static string _getDuration()
         {
-            string result = _getBasicStats();
-
             if (_cachedPlaylist.Durations == null)
                 _calculateAdditionalStats();
 
             var millisPerHour = 60 * 60 * 1000;
             var millisPerMinute = 60 * 1000;
-            result += "\n\nThe playlist's total duration is " + _cachedPlaylist.TotalDuration / millisPerHour + " hours and " + _cachedPlaylist.TotalDuration % millisPerHour / millisPerMinute + " minutes.\n\nHere's who added how much:";
+            var result = "The playlist's total duration is " + _cachedPlaylist.TotalDuration / millisPerHour + " hours and " + _cachedPlaylist.TotalDuration % millisPerHour / millisPerMinute + " minutes.\n\nHere's who added how much:";
+
             foreach (var pair in _cachedPlaylist.Durations)
                 result += "\n" + pair.Key + ": " + pair.Value / millisPerHour + "h" + pair.Value % millisPerHour / millisPerMinute + "m";
 
-            result += "\n\nThe playlist's average popularity score is " + _cachedPlaylist.TotalPopularity.ToString("##0.00") + ".\n\nHere's who added the most popular songs:";
+            return result;
+        }
+
+        private static string _getPopularity()
+        {
+            if (_cachedPlaylist.Popularities == null)
+                _calculateAdditionalStats();
+
+            var result = "The playlist's average popularity score is " + _cachedPlaylist.TotalPopularity.ToString("##0.00") + ".\n\nHere's who added the most popular songs:";
             foreach (var pair in _cachedPlaylist.Popularities)
                 result += "\n" + pair.Key + ": " + pair.Value.ToString("##0.00");
 
