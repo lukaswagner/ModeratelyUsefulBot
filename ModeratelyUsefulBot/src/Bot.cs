@@ -30,7 +30,8 @@ namespace ModeratelyUsefulBot
                     Commands.Add(commandName, command);
                 }
             
-            _fallbackCommand = new Command(null, (c, m, a) => c.BotClient.SendTextMessageAsync(m.Chat.Id, fallbackMessage), this);
+            _fallbackCommand = new Command(null, ((Action<Command, Message, IEnumerable<string>>)MiscCommands.SendText).Method, this);
+            _fallbackCommand.Parameters["text"] = fallbackMessage;
 
             _timedCommands = timedCommands;
             _timedCommands.ForEach(tc => tc.Bot = this);

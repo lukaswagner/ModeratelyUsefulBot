@@ -36,12 +36,12 @@ namespace ModeratelyUsefulBot
         }
 
         [Command(Name = "Get random meme", ShortDescription = "get random meme", Description = "Posts a random meme from the first page of /r/dankmemes.")]
-        internal static void GetRandomMeme(Bot bot, Message message, IEnumerable<string> arguments)
+        internal static void GetRandomMeme(this Command command, Message message, IEnumerable<string> arguments)
         {
             int offset = _random.Next(25);
             var post = _dankmemes.Hot.Skip(_postOffset + offset).Take(1).First();
             var photo = new FileToSend(post.Url);
-            bot.BotClient.SendPhotoAsync(message.Chat.Id, photo, post.Title);
+            command.Bot.BotClient.SendPhotoAsync(message.Chat.Id, photo, post.Title);
         }
 
         internal static void LinkTopMeme(Bot bot, ChatId chatId)

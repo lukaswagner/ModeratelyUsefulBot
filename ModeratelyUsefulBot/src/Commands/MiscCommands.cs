@@ -11,18 +11,18 @@ namespace ModeratelyUsefulBot
     {
         [Command(Name = "Ping", ShortDescription = "test bot status", Description = "Checks if the Bot is available. Replies with the given text, or a sample text if none is specified.")]
         [Argument(Name = "Reply text", Type = typeof(string), Description = "The text which the bot will reply with.", Optional = true, DefaultValue = "pong")]
-        internal static void Ping(Bot bot, Message message, IEnumerable<string> arguments)
+        internal static void Ping(this Command command, Message message, IEnumerable<string> arguments)
         {
-            bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
         }
 
         [Command(Name = "Log", ShortDescription = "get event log", Description = "Retrieves the log file, if file logging is enabled. The log is either sent as message or as file.")]
         [Argument(Name = "Send method", Type = typeof(string), Description = "How to return the log. Available options are \"print\" (send as message) and \"file\" (send text file).", Optional = true, DefaultValue = "file")]
-        internal static void GetLog(Bot bot, Message message, IEnumerable<string> arguments)
+        internal static void GetLog(this Command command, Message message, IEnumerable<string> arguments)
         {
             if (Log.FilePath == null || Log.FilePath == "")
             {
-                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Logging to file is disabled. Can't show current log file.");
+                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Logging to file is disabled. Can't show current log file.");
                 return;
             }
 
@@ -42,7 +42,7 @@ namespace ModeratelyUsefulBot
                     {
                         var log = sr.ReadToEnd();
                         if(log.Length < remainingLength)
-                            bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + log + codeFooter, Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + log + codeFooter, Telegram.Bot.Types.Enums.ParseMode.Markdown);
                         else
                         {
                             sr.BaseStream.Position = 0;
@@ -73,7 +73,7 @@ namespace ModeratelyUsefulBot
                             
                             var partCount = parts.Count;
                             for (var i = 0; i < partCount; i++)
-                                bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + String.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
+                                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + String.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
                         }
                     }
 
@@ -82,16 +82,16 @@ namespace ModeratelyUsefulBot
                     
                 else if (arguments.First().ToLower() == "file")
                 {
-                    bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
+                    command.Bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
                 }
                 else
-                    bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use \"print\" or \"file.\"");
+                    command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use \"print\" or \"file.\"");
         }
 
         [Command(Name = "Log a lot", ShortDescription = "logs a lot of things", Description = "Logs a given amount of messages with a given length each. Used for debugging.")]
         [Argument(Name = "Number of logs", Type = typeof(int), Description = "Number of messages to log.", Optional = true, DefaultValue = "1")]
         [Argument(Name = "Number of characters", Type = typeof(int), Description = "Number of characters per log.", Optional = true, DefaultValue = "10")]
-        internal static void LogALot(Bot bot, Message message, IEnumerable<string> arguments)
+        internal static void LogALot(this Command command, Message message, IEnumerable<string> arguments)
         {
             var logs = 1;
             var charsPerLog = 10;
@@ -101,14 +101,14 @@ namespace ModeratelyUsefulBot
                 int.TryParse(arguments.Skip(1).First(), out charsPerLog);
             
             for (int i = 0; i < logs; i++)
-                Log.Info(bot.Tag, new string((char)0x262d, charsPerLog));
+                Log.Info(command.Bot.Tag, new string((char)0x262d, charsPerLog));
         }
 
         [Command(Name = "Help", ShortDescription = "get help about available commands", Description = "Shows a list of available commands, or information about a given command.")]
         [Argument(Name = "Command", Type = typeof(string), Description = "Name of the command to get information on, with or without the leading slash.", Optional = true)]
-        internal static void Help(Bot bot, Message message, IEnumerable<string> arguments)
+        internal static void Help(this Command command, Message message, IEnumerable<string> arguments)
         {
-            bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() == 0 ? _getCommandList(bot, message.From.Id) : _getCommandInfo(bot, message.From.Id, arguments.First()));
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() == 0 ? _getCommandList(command.Bot, message.From.Id) : _getCommandInfo(command.Bot, message.From.Id, arguments.First()));
         }
 
         private static string _getCommandList(Bot bot, int user)
@@ -163,6 +163,12 @@ namespace ModeratelyUsefulBot
                 result += "\n\nYou can't use this command, it is available to admins only.";
 
             return result;
+        }
+
+        [Command(Name = "Send Text", ShortDescription = "send predefined text", Description = "Sends a predefined text.")]
+        internal static void SendText(this Command command, Message message, IEnumerable<string> arguments)
+        {
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, command.Parameters["text"] as string);
         }
     }
 }

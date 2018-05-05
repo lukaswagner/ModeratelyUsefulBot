@@ -11,17 +11,18 @@ namespace ModeratelyUsefulBot
     {
         private static string _tag = "Command";
 
-        internal Action<Bot, Message, IEnumerable<string>> Action;
+        internal Action<Message, IEnumerable<string>> Action;
         internal IEnumerable<string> Names;
         internal Bot Bot;
         internal bool AdminOnly;
         internal Dictionary<string, object> Parameters;
+        internal Dictionary<string, object> Data = new Dictionary<string, object>();
 
-        public Command(IEnumerable<string> names, Action<Bot, Message, IEnumerable<string>> action, Bot bot = null, bool adminOnly = false, Dictionary<string, object> parameters = null)
+        public Command(IEnumerable<string> names, MethodInfo action, Bot bot = null, bool adminOnly = false, Dictionary<string, object> parameters = null)
         {
             Bot = bot;
             Names = names;
-            Action = action;
+            Action = (Action<Message, IEnumerable<string>>)action.CreateDelegate(typeof(Action<Message, IEnumerable<string>>), this);
             AdminOnly = adminOnly;
             Parameters = parameters ?? new Dictionary<string, object>();
         }
@@ -61,11 +62,10 @@ namespace ModeratelyUsefulBot
             RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);
             var actionMethod = actionClass.GetMethod(splitAction[1], BindingFlags.Static | BindingFlags.NonPublic);
             if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
-            var action = (Action<Bot, Message, IEnumerable<string>>)Delegate.CreateDelegate(typeof(Action<Bot, Message, IEnumerable<string>>), actionMethod);
 
             var parameters = _parseCommandParameters(path);
 
-            return new Command(names.Select(n => "/" + n), action, adminOnly: adminOnly, parameters: parameters);
+            return new Command(names.Select(n => "/" + n), actionMethod, adminOnly: adminOnly, parameters: parameters);
         }
 
         private static Dictionary<string, object> _parseCommandParameters(string commandPath)
@@ -127,7 +127,7 @@ namespace ModeratelyUsefulBot
             if (Bot == null)
                 return;
 
-            Action.Invoke(Bot, message, arguments);
+            Action.Invoke(message, arguments);
         }
     }
 }
