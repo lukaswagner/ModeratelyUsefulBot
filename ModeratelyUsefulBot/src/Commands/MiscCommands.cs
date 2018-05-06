@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using Telegram.Bot.Types;
@@ -41,7 +40,7 @@ namespace ModeratelyUsefulBot
                     using (var sr = new StreamReader(fs))
                     {
                         var log = sr.ReadToEnd();
-                        if(log.Length < remainingLength)
+                        if (log.Length < remainingLength)
                             command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + log + codeFooter, Telegram.Bot.Types.Enums.ParseMode.Markdown);
                         else
                         {
@@ -55,10 +54,10 @@ namespace ModeratelyUsefulBot
                             var curPart = parts.Last();
                             string line;
 
-                            while(!sr.EndOfStream)
+                            while (!sr.EndOfStream)
                             {
                                 line = sr.ReadLine();
-                                if(curLength + curPart.Count - 1 + line.Length < remainingLength)
+                                if (curLength + curPart.Count - 1 + line.Length < remainingLength)
                                 {
                                     curLength += line.Length;
                                     curPart.Add(line);
@@ -70,7 +69,7 @@ namespace ModeratelyUsefulBot
                                     parts.Add(curPart);
                                 }
                             }
-                            
+
                             var partCount = parts.Count;
                             for (var i = 0; i < partCount; i++)
                                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + String.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
@@ -79,7 +78,7 @@ namespace ModeratelyUsefulBot
 
 
                 }
-                    
+
                 else if (arguments.First().ToLower() == "file")
                 {
                     command.Bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
@@ -99,7 +98,7 @@ namespace ModeratelyUsefulBot
                 int.TryParse(arguments.First(), out logs);
             if (arguments.Count() > 1)
                 int.TryParse(arguments.Skip(1).First(), out charsPerLog);
-            
+
             for (int i = 0; i < logs; i++)
                 Log.Info(command.Bot.Tag, new string((char)0x262d, charsPerLog));
         }

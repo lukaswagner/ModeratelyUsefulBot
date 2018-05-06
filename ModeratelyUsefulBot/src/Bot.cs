@@ -29,7 +29,7 @@ namespace ModeratelyUsefulBot
                     command.Bot = this;
                     Commands.Add(commandName, command);
                 }
-            
+
             _fallbackCommand = new Command(null, ((Action<Command, Message, IEnumerable<string>>)MiscCommands.SendText).Method, this);
             _fallbackCommand.Parameters["text"] = fallbackMessage;
 
@@ -60,14 +60,14 @@ namespace ModeratelyUsefulBot
             }
 
             if (!checkArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
-            if(!checkArg(Config.Get(path + "/token", out string token, "credentials"), "No token found in config.")) return null;
+            if (!checkArg(Config.Get(path + "/token", out string token, "credentials"), "No token found in config.")) return null;
             var hasCustomFallbackMessage = Config.DoesPropertyExist(path + "/fallbackMessage");
             string fallbackMessage = "";
             if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);
             string name = Config.GetDefault(path + "/name", "");
 
             var admins = new List<int>();
-            if(Config.DoesPropertyExist(path + "/admins"))
+            if (Config.DoesPropertyExist(path + "/admins"))
             {
                 var adminIndex = 1;
                 while (Config.DoesPropertyExist(path + "/admins/admin[" + adminIndex + "]"))
@@ -79,7 +79,7 @@ namespace ModeratelyUsefulBot
             while (Config.DoesPropertyExist(path + "/commands/command[" + commandIndex + "]"))
             {
                 var command = Command.CreateCommand(path, commandIndex++);
-                if(command != null)
+                if (command != null)
                     commands.Add(command);
             }
 
@@ -92,8 +92,8 @@ namespace ModeratelyUsefulBot
                     timedCommands.Add(timedCommand);
             }
 
-            var bot = hasCustomFallbackMessage ? 
-                new Bot(token, commands, timedCommands, admins, name, fallbackMessage): 
+            var bot = hasCustomFallbackMessage ?
+                new Bot(token, commands, timedCommands, admins, name, fallbackMessage) :
                 new Bot(token, commands, timedCommands, admins, name);
 
             if (Config.GetDefault(path + "/autostart", true))
@@ -137,7 +137,7 @@ namespace ModeratelyUsefulBot
                 var split = message.Text.Split(' ');
                 var name = split[0].ToLower();
                 var containsUsername = name.IndexOf('@');
-                if(containsUsername > -1)
+                if (containsUsername > -1)
                     name = name.Substring(0, containsUsername);
                 var arguments = split.Skip(1);
 

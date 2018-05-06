@@ -47,7 +47,7 @@ namespace ModeratelyUsefulBot
             else
             {
                 var nameIndex = 1;
-                while(Config.DoesPropertyExist(path + "/names/name[" + nameIndex + "]"))
+                while (Config.DoesPropertyExist(path + "/names/name[" + nameIndex + "]"))
                     if (Config.Get(path + "/names/name[" + nameIndex++ + "]", out name))
                         names.Add(name);
             }
@@ -56,7 +56,7 @@ namespace ModeratelyUsefulBot
             var adminOnly = Config.GetDefault(path + "/adminOnly", false);
 
             var splitAction = actionString.Split('.');
-            if(!checkArg(splitAction.Length == 2, "Action should contain class and method name divided by a period.")) return null;
+            if (!checkArg(splitAction.Length == 2, "Action should contain class and method name divided by a period.")) return null;
             var actionClass = Type.GetType("ModeratelyUsefulBot." + splitAction[0]);
             if (!checkArg(actionClass != null, "Could not find class " + splitAction[0] + ".")) return null;
             RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);
@@ -84,7 +84,7 @@ namespace ModeratelyUsefulBot
             }
 
             string parameterPath;
-            while((parameterPath = commandPath + "/parameters/parameter[" + ++parameterIndex + "]").Length > 0 && Config.DoesPropertyExist(parameterPath))
+            while ((parameterPath = commandPath + "/parameters/parameter[" + ++parameterIndex + "]").Length > 0 && Config.DoesPropertyExist(parameterPath))
             {
                 if (!checkArg(Config.Get(parameterPath + "/name", out string name), "Could not read parameter name. Skipping parameter.") ||
                     !checkArg(Config.Get(parameterPath + "/type", out string type), "Could not read parameter type. Skipping parameter.") ||

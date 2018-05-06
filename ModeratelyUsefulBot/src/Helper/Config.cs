@@ -28,7 +28,7 @@ namespace ModeratelyUsefulBot
         static Config()
         {
             bool success = true;
-            foreach(var file in _files)
+            foreach (var file in _files)
             {
                 var events = new List<ValidationEventArgs>();
 
@@ -48,7 +48,7 @@ namespace ModeratelyUsefulBot
                 var nsmgr = new XmlNamespaceManager(doc.NameTable);
                 nsmgr.AddNamespace(_namespacePrefix, file.Key);
 
-                if(events.Count() > 0)
+                if (events.Count() > 0)
                 {
                     var message = string.Join('\n', events.Select(e => (e.Severity == XmlSeverityType.Warning ? "Warning" : "Error") + " at line " + e.Exception.LineNumber + ": " + e.Message));
                     Console.WriteLine("Invalid XML: " + file.Value);

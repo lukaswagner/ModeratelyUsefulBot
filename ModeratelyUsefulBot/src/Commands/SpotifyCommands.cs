@@ -50,7 +50,7 @@ namespace ModeratelyUsefulBot
         private static void _refreshToken()
         {
             _token = _auth.RefreshToken(Config.GetDefault("spotify/auth/refreshToken", "", "credentials"), Config.GetDefault("spotify/auth/clientSecret", "", "credentials"));
-            if(_spotify != null)
+            if (_spotify != null)
                 _spotify.AccessToken = _token.AccessToken;
         }
 
@@ -76,7 +76,7 @@ namespace ModeratelyUsefulBot
                 _refreshToken();
 
             // check for "refresh" argument
-            if(arguments.Count() > 0 && arguments.First().ToLower() == "refresh")
+            if (arguments.Count() > 0 && arguments.First().ToLower() == "refresh")
             {
                 _loadPlaylist(command);
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Ok, I refreshed the playlist.");
@@ -86,7 +86,7 @@ namespace ModeratelyUsefulBot
             // send placeholder, get playlist and do calculations
             var placeholderMessage = command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Crunching the latest data, just for you. Hang tight...");
 
-            if(_cachedPlaylistOutdated(command))
+            if (_cachedPlaylistOutdated(command))
                 _loadPlaylist(command);
 
             string answer;
@@ -127,8 +127,8 @@ namespace ModeratelyUsefulBot
             if (!command.Data.ContainsKey("cachedPlaylist"))
                 return true;
             var playlist = _spotify.GetPlaylist(
-                command.Parameters["playlistUser"] as string, 
-                command.Parameters["playlistId"] as string, 
+                command.Parameters["playlistUser"] as string,
+                command.Parameters["playlistId"] as string,
                 "snapshot_id");
             return playlist.SnapshotId != (command.Data["cachedPlaylist"] as CachedPlaylist)?.SnapshotId;
         }
@@ -136,8 +136,8 @@ namespace ModeratelyUsefulBot
         private static void _loadPlaylist(Command command)
         {
             var playlist = _spotify.GetPlaylist(
-                command.Parameters["playlistUser"] as string, 
-                command.Parameters["playlistId"] as string, 
+                command.Parameters["playlistUser"] as string,
+                command.Parameters["playlistId"] as string,
                 "snapshot_id,tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id,track.duration_ms,track.popularity)");
             var paging = playlist.Tracks;
             var tracks = paging.Items;
@@ -165,7 +165,7 @@ namespace ModeratelyUsefulBot
 
             string result = "The playlist currently contains " + cachedPlaylist.Tracks.Count() + " songs.\n\nHere's who added how many:";
 
-            foreach(var key in cachedPlaylist.Counts.Keys)
+            foreach (var key in cachedPlaylist.Counts.Keys)
                 result += "\n" + key + ": " + cachedPlaylist.Counts[key];
 
             return result;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Telegram.Bot.Types;
 
 namespace ModeratelyUsefulBot
@@ -66,7 +65,7 @@ namespace ModeratelyUsefulBot
         [Argument(Name = "Bot", Type = typeof(string), Description = "The bot to be started.")]
         internal static void Start(this Command command, Message message, IEnumerable<string> arguments)
         {
-            if(arguments.Count() == 0)
+            if (arguments.Count() == 0)
             {
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot name.");
                 return;
@@ -141,25 +140,25 @@ namespace ModeratelyUsefulBot
                 return;
             }
             cmd.AdminOnly = adminOnly;
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + string.Join(" aka ",  cmd.Names) + " of bot " + target.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + string.Join(" aka ", cmd.Names) + " of bot " + target.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
         }
 
         private static bool _tryGetBot(Bot bot, Message message, string name, out Bot target)
         {
             var caseSensitive = Program.Bots.Where(b => b.Name == name);
-            if(caseSensitive.Count() > 0)
+            if (caseSensitive.Count() > 0)
             {
                 target = caseSensitive.First();
                 return true;
             }
             var caseInsensitive = Program.Bots.Where(b => b.Name.ToLower() == name.ToLower());
-            if(caseInsensitive.Count() == 0)
+            if (caseInsensitive.Count() == 0)
             {
                 bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find a bot with the given name.");
                 target = null;
                 return false;
             }
-            if(caseInsensitive.Count() > 1)
+            if (caseInsensitive.Count() > 1)
             {
                 bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Multiple bots with similar names found. Please specify the target name case sensitive.");
                 target = null;

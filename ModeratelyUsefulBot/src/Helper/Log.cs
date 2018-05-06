@@ -151,7 +151,7 @@ namespace ModeratelyUsefulBot
                 writer.Close();
                 writer.Dispose();
             }
-            if(fileStream != null)
+            if (fileStream != null)
             {
                 fileStream.Close();
                 fileStream.Dispose();
