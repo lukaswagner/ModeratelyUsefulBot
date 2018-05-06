@@ -1,79 +1,94 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="config" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema
+    attributeFormDefault="unqualified"
+    elementFormDefault="qualified"
+    targetNamespace="config"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:cnf="config">
+
     <xs:element name="config">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="bots">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element maxOccurs="unbounded" name="bot">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="name" type="xs:string" />
-                                        <xs:element name="autostart" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
-                                        <xs:element name="fallbackMessage" type="xs:string" minOccurs="0" maxOccurs="1"/>
-                                        <xs:element name="commands">
-                                            <xs:complexType>
-                                                <xs:sequence>
-                                                    <xs:element maxOccurs="unbounded" name="command">
-                                                        <xs:complexType>
-                                                            <xs:sequence>
-                                                                <xs:choice>
-                                                                    <xs:element name="name" type="xs:string" />
-                                                                    <xs:element name="names">
-                                                                        <xs:complexType>
-                                                                            <xs:sequence>
-                                                                                <xs:element maxOccurs="unbounded" name="name" type="xs:string" />
-                                                                            </xs:sequence>
-                                                                        </xs:complexType>
-                                                                    </xs:element>
-                                                                </xs:choice>
-                                                                <xs:element name="action" type="xs:string" />
-                                                                <xs:element name="adminOnly" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
-                                                                <xs:element name="parameters" minOccurs="0" maxOccurs="1">
-                                                                    <xs:complexType>
-                                                                        <xs:sequence>
-                                                                            <xs:element name="parameter" maxOccurs="unbounded">
-                                                                                <xs:complexType>
-                                                                                    <xs:sequence>
-                                                                                        <xs:element name="name" type="xs:string"/>
-                                                                                        <xs:element name="type" type="xs:string"/>
-                                                                                        <xs:element name="value" type="xs:string"/>
-                                                                                    </xs:sequence>
-                                                                                </xs:complexType>
-                                                                            </xs:element>
-                                                                        </xs:sequence>
-                                                                    </xs:complexType>
-                                                                </xs:element>
-                                                            </xs:sequence>
-                                                        </xs:complexType>
-                                                    </xs:element>
-                                                </xs:sequence>
-                                            </xs:complexType>
-                                        </xs:element>
-                                        <xs:element minOccurs="0" name="admins">
-                                            <xs:complexType>
-                                                <xs:sequence>
-                                                    <xs:element name="admin" type="xs:unsignedInt" />
-                                                </xs:sequence>
-                                            </xs:complexType>
-                                        </xs:element>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
-                <xs:element name="log">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="consoleLevel" type="xs:string" />
-                            <xs:element name="fileLevel" type="xs:string" />
-                            <xs:element name="logTimes" type="xs:boolean" />
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
+                <xs:element name="bots" type="cnf:bots"/>
+                <xs:element name="log" type="cnf:log"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+
+    <!-- bots -->
+
+    <xs:complexType name="bots">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" name="bot" type="cnf:bot"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="bot">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string" />
+            <xs:element name="autostart" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="fallbackMessage" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="commands" type="cnf:commands"/>
+            <xs:element minOccurs="0" name="admins" type="cnf:admins"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- bot data -->
+
+    <xs:complexType name="commands">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" name="command" type="cnf:command"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="command">
+        <xs:sequence>
+            <xs:choice>
+                <xs:element name="name" type="xs:string" />
+                <xs:element name="names" type="cnf:commandNameList"/>
+            </xs:choice>
+            <xs:element name="action" type="xs:string" />
+            <xs:element name="adminOnly" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="parameters" type="cnf:parameters" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="admins">
+        <xs:sequence>
+            <xs:element name="admin" type="xs:unsignedInt" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- command data -->
+
+    <xs:complexType name="commandNameList">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" name="name" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="parameters">
+        <xs:sequence>
+            <xs:element name="parameter" type="cnf:parameter" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="parameter">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="type" type="xs:string"/>
+            <xs:element name="value" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- global settings -->
+
+    <xs:complexType name="log">
+        <xs:sequence>
+            <xs:element name="consoleLevel" type="xs:string" />
+            <xs:element name="fileLevel" type="xs:string" />
+            <xs:element name="logTimes" type="xs:boolean" />
+        </xs:sequence>
+    </xs:complexType>
+
 </xs:schema>
