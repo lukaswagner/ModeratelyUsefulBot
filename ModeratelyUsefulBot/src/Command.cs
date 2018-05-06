@@ -18,7 +18,7 @@ namespace ModeratelyUsefulBot
         internal Dictionary<string, object> Parameters;
         internal Dictionary<string, object> Data = new Dictionary<string, object>();
 
-        public Command(IEnumerable<string> names, MethodInfo action, Bot bot = null, bool adminOnly = false, Dictionary<string, object> parameters = null)
+        internal Command(IEnumerable<string> names, MethodInfo action, Bot bot = null, bool adminOnly = false, Dictionary<string, object> parameters = null)
         {
             Bot = bot;
             Names = names;
@@ -122,7 +122,7 @@ namespace ModeratelyUsefulBot
             return result;
         }
 
-        public void Invoke(Message message, IEnumerable<string> arguments)
+        internal void Invoke(Message message, IEnumerable<string> arguments)
         {
             if (Bot == null)
                 return;

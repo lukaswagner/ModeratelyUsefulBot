@@ -14,7 +14,7 @@ namespace ModeratelyUsefulBot
         internal Dictionary<string, Command> Commands;
         private List<TimedCommand> _timedCommands;
         private Command _fallbackCommand;
-        public List<int> Admins;
+        internal List<int> Admins;
         internal string Name;
         internal string Tag;
 

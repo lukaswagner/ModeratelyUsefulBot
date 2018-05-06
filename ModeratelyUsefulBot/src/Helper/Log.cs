@@ -8,19 +8,19 @@ namespace ModeratelyUsefulBot
 {
     internal static class Log
     {
-        public enum LogLevel
+        internal enum LogLevel
         {
             Verbose, Debug, Info, Warn, Error, Off
         }
 
         private class LogEntry
         {
-            public LogLevel LogLevel;
-            public string Tag;
-            public string Message;
-            public string Time;
+            internal LogLevel LogLevel;
+            internal string Tag;
+            internal string Message;
+            internal string Time;
 
-            public LogEntry(LogLevel logLevel, string tag, string message)
+            internal LogEntry(LogLevel logLevel, string tag, string message)
             {
                 LogLevel = logLevel;
                 Tag = tag;
@@ -28,7 +28,7 @@ namespace ModeratelyUsefulBot
                 Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
             }
 
-            public void LogToConsole()
+            internal void LogToConsole()
             {
                 if (_changeConsoleColor(LogLevel, out var consoleColor))
                 {
@@ -38,7 +38,7 @@ namespace ModeratelyUsefulBot
                 Console.ResetColor();
             }
 
-            public void LogToFile(StreamWriter writer)
+            internal void LogToFile(StreamWriter writer)
             {
                 writer.WriteLine(_getLogString());
                 writer.Flush();
@@ -94,9 +94,9 @@ namespace ModeratelyUsefulBot
         private static LogLevel _consoleLevel = LogLevel.Off;
         private static LogLevel _fileLevel = LogLevel.Off;
         private static LogLevel _level = LogLevel.Off;
-        public static int TagLength = 15;
-        public static bool LogTimes = Config.GetDefault("log/logTimes", true);
-        public static string FilePath { get; private set; }
+        internal static int TagLength = 15;
+        internal static bool LogTimes = Config.GetDefault("log/logTimes", true);
+        internal static string FilePath { get; private set; }
 
         private static void _exitHandler(object sender, EventArgs e) => Disable();
 
@@ -164,7 +164,7 @@ namespace ModeratelyUsefulBot
                 _queue.Add(new LogEntry(logLevel, tag, message));
         }
 
-        public static void Enable(LogLevel consoleLevel, LogLevel fileLevel)
+        internal static void Enable(LogLevel consoleLevel, LogLevel fileLevel)
         {
             _consoleLevel = consoleLevel;
             _fileLevel = fileLevel;
@@ -176,7 +176,7 @@ namespace ModeratelyUsefulBot
             }
         }
 
-        public static void Enable(string consoleLevelString, string fileLevelString = "Off")
+        internal static void Enable(string consoleLevelString, string fileLevelString = "Off")
         {
             LogLevel consoleLevel;
             try
@@ -211,7 +211,7 @@ namespace ModeratelyUsefulBot
             Enable(consoleLevel, fileLevel);
         }
 
-        public static void Disable()
+        internal static void Disable()
         {
             _level = LogLevel.Off;
             lock (_logLoopLock)
@@ -223,14 +223,14 @@ namespace ModeratelyUsefulBot
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static void Verbose(string tag, string message) => _add(LogLevel.Verbose, tag, message);
+        internal static void Verbose(string tag, string message) => _add(LogLevel.Verbose, tag, message);
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static void Debug(string tag, string message) => _add(LogLevel.Debug, tag, message);
+        internal static void Debug(string tag, string message) => _add(LogLevel.Debug, tag, message);
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static void Info(string tag, string message) => _add(LogLevel.Info, tag, message);
+        internal static void Info(string tag, string message) => _add(LogLevel.Info, tag, message);
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static void Warn(string tag, string message) => _add(LogLevel.Warn, tag, message);
+        internal static void Warn(string tag, string message) => _add(LogLevel.Warn, tag, message);
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static void Error(string tag, string message) => _add(LogLevel.Error, tag, message);
+        internal static void Error(string tag, string message) => _add(LogLevel.Error, tag, message);
     }
 }

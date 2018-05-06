@@ -69,9 +69,9 @@ namespace ModeratelyUsefulBot
 
         private static XmlNode _selectSingleNode((XmlDocument, XmlNamespaceManager) pair, string path) => pair.Item1.SelectSingleNode(path.Replace(_slash.ToString(), _slash + _namespacePrefix + ':'), pair.Item2);
 
-        public static bool DoesPropertyExist(string property, string file = _defaultDoc) => _docs.TryGetValue(file, out var pair) && _selectSingleNode(pair, _slash + file + _slash + property) != null;
+        internal static bool DoesPropertyExist(string property, string file = _defaultDoc) => _docs.TryGetValue(file, out var pair) && _selectSingleNode(pair, _slash + file + _slash + property) != null;
 
-        public static bool Get<T>(string property, out T value, string file = _defaultDoc)
+        internal static bool Get<T>(string property, out T value, string file = _defaultDoc)
         {
             value = default(T);
             var valueString = "";
@@ -112,7 +112,7 @@ namespace ModeratelyUsefulBot
             }
         }
 
-        public static T GetDefault<T>(string property, T defaultValue, string file = _defaultDoc)
+        internal static T GetDefault<T>(string property, T defaultValue, string file = _defaultDoc)
         {
             if (!DoesPropertyExist(property, file))
             {
@@ -123,7 +123,7 @@ namespace ModeratelyUsefulBot
             return outValue;
         }
 
-        public static bool Set(string property, object value, string file = _defaultDoc)
+        internal static bool Set(string property, object value, string file = _defaultDoc)
         {
             if (!_docs.TryGetValue(file, out var pair))
             {

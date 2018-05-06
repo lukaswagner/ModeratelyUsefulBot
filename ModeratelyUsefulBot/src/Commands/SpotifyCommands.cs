@@ -12,14 +12,14 @@ namespace ModeratelyUsefulBot
     {
         private class CachedPlaylist
         {
-            public IOrderedEnumerable<PlaylistTrack> Tracks;
-            public IEnumerable<IGrouping<string, PlaylistTrack>> GroupedTracks;
-            public IDictionary<string, int> Counts;
-            public IOrderedEnumerable<KeyValuePair<string, int>> Durations;
-            public int TotalDuration;
-            public IOrderedEnumerable<KeyValuePair<string, double>> Popularities;
-            public double TotalPopularity;
-            public string SnapshotId;
+            internal IOrderedEnumerable<PlaylistTrack> Tracks;
+            internal IEnumerable<IGrouping<string, PlaylistTrack>> GroupedTracks;
+            internal IDictionary<string, int> Counts;
+            internal IOrderedEnumerable<KeyValuePair<string, int>> Durations;
+            internal int TotalDuration;
+            internal IOrderedEnumerable<KeyValuePair<string, double>> Popularities;
+            internal double TotalPopularity;
+            internal string SnapshotId;
         }
 
         private static string _tag = "Spotify";
