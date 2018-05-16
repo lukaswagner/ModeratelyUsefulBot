@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ModeratelyUsefulBot.Helper;
 using Telegram.Bot.Types;
 
 // ReSharper disable UnusedMember.Global
 
-namespace ModeratelyUsefulBot
+namespace ModeratelyUsefulBot.Commands
 {
     internal static class ManagementCommands
     {

@@ -1,14 +1,15 @@
-﻿using SpotifyAPI.Web;
+﻿using System.Collections.Generic;
+using System.Linq;
+using ModeratelyUsefulBot.Helper;
+using SpotifyAPI.Web;
 using SpotifyAPI.Web.Auth;
 using SpotifyAPI.Web.Enums;
 using SpotifyAPI.Web.Models;
-using System.Collections.Generic;
-using System.Linq;
 using Telegram.Bot.Types;
 
 // ReSharper disable UnusedMember.Global
 
-namespace ModeratelyUsefulBot
+namespace ModeratelyUsefulBot.Commands
 {
     internal static class SpotifyCommands
     {

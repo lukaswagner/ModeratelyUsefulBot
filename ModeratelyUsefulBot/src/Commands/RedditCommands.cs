@@ -1,13 +1,14 @@
-﻿using RedditSharp;
-using RedditSharp.Things;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ModeratelyUsefulBot.Helper;
+using RedditSharp;
+using RedditSharp.Things;
 using Telegram.Bot.Types;
 
 // ReSharper disable UnusedMember.Global
 
-namespace ModeratelyUsefulBot
+namespace ModeratelyUsefulBot.Commands
 {
     internal static class RedditCommands
     {

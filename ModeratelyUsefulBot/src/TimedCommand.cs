@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using ModeratelyUsefulBot.Helper;
 using Telegram.Bot.Types;
 
 namespace ModeratelyUsefulBot
@@ -51,7 +52,7 @@ namespace ModeratelyUsefulBot
 
             var splitAction = actionString.Split('.');
             if (!CheckArg(splitAction.Length == 2, "Action should contain class and method name divided by a period.")) return null;
-            var actionClass = Type.GetType("ModeratelyUsefulBot." + splitAction[0]);
+            var actionClass = Type.GetType("ModeratelyUsefulBot.Commands." + splitAction[0]);
             if (!CheckArg(actionClass != null, "Could not find class " + splitAction[0] + ".")) return null;
             Debug.Assert(actionClass != null, nameof(actionClass) + " != null");
             RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);

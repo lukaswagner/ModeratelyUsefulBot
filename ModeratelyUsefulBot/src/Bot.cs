@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ModeratelyUsefulBot.Commands;
+using ModeratelyUsefulBot.Helper;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;

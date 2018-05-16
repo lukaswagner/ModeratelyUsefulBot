@@ -10,7 +10,7 @@ using System.Xml.Schema;
 
 // ReSharper disable UnusedMember.Global
 
-namespace ModeratelyUsefulBot
+namespace ModeratelyUsefulBot.Helper
 {
     internal static class Config
     {

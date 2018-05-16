@@ -6,7 +6,7 @@ using System.Threading;
 
 // ReSharper disable UnusedMember.Global
 
-namespace ModeratelyUsefulBot
+namespace ModeratelyUsefulBot.Helper
 {
     internal static class Log
     {
