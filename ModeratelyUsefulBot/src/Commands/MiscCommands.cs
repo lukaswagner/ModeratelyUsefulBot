@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ModeratelyUsefulBot.Helper;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 // ReSharper disable UnusedMember.Global
 
@@ -179,6 +180,23 @@ namespace ModeratelyUsefulBot.Commands
         internal static void SendText(this Command command, Message message, IEnumerable<string> arguments)
         {
             command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, command.Parameters["text"] as string);
+        }
+
+        [Command(Name = "Mention", ShortDescription = "mentions users", Description = "")]
+        internal static void Mention(this Command command, Message message, IEnumerable<string> arguments)
+        {
+            var result = "";
+
+            if (command.Parameters["userList"] is List<object> users)
+                foreach (var user in users)
+                {
+                    var chat = command.Bot.BotClient.GetChatAsync(new ChatId((int) user)).GetAwaiter().GetResult();
+                    result += string.Format("[{0}](tg://user?id={1}) ", chat.FirstName, (int) user);
+                }
+            else
+                result = "No users specified.";
+
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, result, ParseMode.Markdown);
         }
     }
 }

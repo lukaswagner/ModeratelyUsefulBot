@@ -29,6 +29,20 @@
                     </parameters>
                 </command>
                 <command>
+                    <name>mention</name>
+                    <action>MiscCommands.Mention</action>
+                    <adminOnly>false</adminOnly>
+                    <parameters>
+                        <parameter>
+                            <name>userList</name>
+                            <type>int</type>
+                            <list>
+                                <value>168587717</value>
+                            </list>
+                        </parameter>
+                    </parameters>
+                </command>
+                <command>
                     <names>
                         <name>start</name>
                         <name>help</name>
