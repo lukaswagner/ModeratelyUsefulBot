@@ -77,7 +77,16 @@
         <xs:sequence>
             <xs:element name="name" type="xs:string"/>
             <xs:element name="type" type="xs:string"/>
-            <xs:element name="value" type="xs:string"/>
+            <xs:choice>
+                <xs:element name="value" type="xs:string"/>
+                <xs:element name="list" type="cnf:parameterValueList"/>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="parameterValueList">
+        <xs:sequence>
+            <xs:element name="value" type="xs:string" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
 

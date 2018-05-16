@@ -89,40 +89,67 @@ namespace ModeratelyUsefulBot
             string parameterPath;
             while ((parameterPath = commandPath + "/parameters/parameter[" + ++parameterIndex + "]").Length > 0 && Config.DoesPropertyExist(parameterPath))
             {
+                string value = null;
+                string list = null;
+
                 if (!CheckArg(Config.Get(parameterPath + "/name", out string name), "Could not read parameter name. Skipping parameter.") ||
                     !CheckArg(Config.Get(parameterPath + "/type", out string type), "Could not read parameter type. Skipping parameter.") ||
-                    !CheckArg(Config.Get(parameterPath + "/value", out string value), "Could not read parameter value. Skipping parameter."))
+                    !CheckArg(Config.DoesPropertyExist(parameterPath + "/value") && Config.Get(parameterPath + "/value", out value) || 
+                              Config.DoesPropertyExist(parameterPath + "/list") && Config.Get(parameterPath + "/list", out list), "Could not read parameter value or value list. Skipping parameter."))
                     continue;
 
-                object parsedValue;
-                switch (type.ToLower())
+                if(value != null)
                 {
-                    case "string":
-                        parsedValue = value;
-                        break;
-                    case "int":
-                    case "integer":
-                        if (!CheckArg(int.TryParse(value, out var intValue), "Could not parse parameter value as integer. Skipping parameter."))
-                            continue;
-                        else
-                            parsedValue = intValue;
-                        break;
-                    case "bool":
-                    case "boolean":
-                        if (!CheckArg(bool.TryParse(value, out var boolValue), "Could not parse parameter value as boolean. Skipping parameter."))
-                            continue;
-                        else
-                            parsedValue = boolValue;
-                        break;
-                    default:
-                        CheckArg(false, "Unknown parameter type. Custom parameters should be passed as strings. Skipping parameter.");
-                        continue;
+                    if (_parseParameterValue(type, value, out var parsedValue))
+                        result.Add(name, parsedValue);
                 }
+                else if(list != null)
+                {
+                    var index = 1;
+                    var objList = new List<object>();
 
-                result.Add(name, parsedValue);
+                    var path = parameterPath + "/list/value[{0}]";
+                    while (Config.DoesPropertyExist(string.Format(path, index)) && Config.Get(string.Format(path, index++), out value))
+                    {
+                        if (_parseParameterValue(type, value, out var parsedValue))
+                            objList.Add(parsedValue);
+                    }
+
+                    if(objList.Any())
+                        result.Add(name, objList);
+                }
             }
 
             return result;
+        }
+
+        private static bool _parseParameterValue(string type, string value, out object result)
+        {
+            result = null;
+            switch (type.ToLower())
+            {
+                case "string":
+                    result = value;
+                    break;
+                case "int":
+                case "integer":
+                    if (!int.TryParse(value, out var intValue))
+                        return false;
+                    else
+                        result = intValue;
+                    break;
+                case "bool":
+                case "boolean":
+                    if (!bool.TryParse(value, out var boolValue))
+                        return false;
+                    else
+                        result = boolValue;
+                    break;
+                default:
+                    return false;
+            }
+
+            return true;
         }
 
         internal void Invoke(Message message, IEnumerable<string> arguments)
