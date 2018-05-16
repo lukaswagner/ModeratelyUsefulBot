@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Telegram.Bot.Types;
 
+// ReSharper disable UnusedMember.Global
+
 namespace ModeratelyUsefulBot
 {
-    static class SpotifyCommands
+    internal static class SpotifyCommands
     {
         private class CachedPlaylist
         {
@@ -22,36 +24,36 @@ namespace ModeratelyUsefulBot
             internal string SnapshotId;
         }
 
-        private static string _tag = "Spotify";
-        private static SpotifyWebAPI _spotify;
-        private static AutorizationCodeAuth _auth;
+        private const string Tag = "Spotify";
+        private static readonly SpotifyWebAPI Spotify;
+        private static readonly AutorizationCodeAuth Auth;
         private static Token _token;
 
         static SpotifyCommands()
         {
-            _auth = new AutorizationCodeAuth()
+            Auth = new AutorizationCodeAuth
             {
                 ClientId = Config.GetDefault("spotify/auth/clientId", "", "credentials"),
                 RedirectUri = "http://localhost",
-                Scope = Scope.UserReadPrivate,
+                Scope = Scope.UserReadPrivate
             };
             _refreshToken();
 
-            _spotify = new SpotifyWebAPI()
+            Spotify = new SpotifyWebAPI
             {
                 AccessToken = _token.AccessToken,
                 TokenType = _token.TokenType,
                 UseAuth = true
             };
 
-            Log.Info(_tag, "Spotify API setup done.");
+            Log.Info(Tag, "Spotify API setup done.");
         }
 
         private static void _refreshToken()
         {
-            _token = _auth.RefreshToken(Config.GetDefault("spotify/auth/refreshToken", "", "credentials"), Config.GetDefault("spotify/auth/clientSecret", "", "credentials"));
-            if (_spotify != null)
-                _spotify.AccessToken = _token.AccessToken;
+            _token = Auth.RefreshToken(Config.GetDefault("spotify/auth/refreshToken", "", "credentials"), Config.GetDefault("spotify/auth/clientSecret", "", "credentials"));
+            if (Spotify != null)
+                Spotify.AccessToken = _token.AccessToken;
         }
 
         [Command(Name = "Playlist statistics", ShortDescription = "show spotify playlist stats", Description = "Shows statistics for the spotify playlist.")]
@@ -76,7 +78,8 @@ namespace ModeratelyUsefulBot
                 _refreshToken();
 
             // check for "refresh" argument
-            if (arguments.Count() > 0 && arguments.First().ToLower() == "refresh")
+            var argList = arguments.ToList();
+            if (argList.Any() && argList.First().ToLower() == "refresh")
             {
                 _loadPlaylist(command);
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Ok, I refreshed the playlist.");
@@ -91,10 +94,10 @@ namespace ModeratelyUsefulBot
 
             string answer;
 
-            if (arguments.Count() == 0)
+            if (!argList.Any())
                 answer = _getTrackCount(command);
             else
-                switch (arguments.First().ToLower())
+                switch (argList.First().ToLower())
                 {
                     case "tracks":
                     case "songs":
@@ -126,7 +129,7 @@ namespace ModeratelyUsefulBot
         {
             if (!command.Data.ContainsKey("cachedPlaylist"))
                 return true;
-            var playlist = _spotify.GetPlaylist(
+            var playlist = Spotify.GetPlaylist(
                 command.Parameters["playlistUser"] as string,
                 command.Parameters["playlistId"] as string,
                 "snapshot_id");
@@ -135,21 +138,20 @@ namespace ModeratelyUsefulBot
 
         private static void _loadPlaylist(Command command)
         {
-            var playlist = _spotify.GetPlaylist(
+            var playlist = Spotify.GetPlaylist(
                 command.Parameters["playlistUser"] as string,
                 command.Parameters["playlistId"] as string,
                 "snapshot_id,tracks.total,tracks.next,tracks.items(added_by.display_name,added_by.id,track.duration_ms,track.popularity)");
             var paging = playlist.Tracks;
             var tracks = paging.Items;
-            var total = paging.Total;
 
             while (paging.HasNextPage())
             {
-                paging = _spotify.GetNextPage(paging);
+                paging = Spotify.GetNextPage(paging);
                 tracks.AddRange(paging.Items);
             }
 
-            command.Data["cachedPlaylist"] = new CachedPlaylist()
+            command.Data["cachedPlaylist"] = new CachedPlaylist
             {
                 Tracks = tracks.OrderBy(t => t.AddedAt),
                 GroupedTracks = tracks.GroupBy(track => track.AddedBy.Id),
@@ -159,65 +161,76 @@ namespace ModeratelyUsefulBot
 
         private static string _getTrackCount(Command command)
         {
-            var cachedPlaylist = command.Data["cachedPlaylist"] as CachedPlaylist;
+            if (!(command.Data["cachedPlaylist"] is CachedPlaylist cachedPlaylist))
+                return "Internal error while retrieving playlist";
+
             if (cachedPlaylist.Counts == null)
                 _calculateBasicStats(command);
 
-            string result = "The playlist currently contains " + cachedPlaylist.Tracks.Count() + " songs.\n\nHere's who added how many:";
+            if (cachedPlaylist.Counts == null)
+                return "Internal error while processing playlist";
 
-            foreach (var key in cachedPlaylist.Counts.Keys)
-                result += "\n" + key + ": " + cachedPlaylist.Counts[key];
+            var result = "The playlist currently contains " + cachedPlaylist.Tracks.Count() + " songs.\n\nHere's who added how many:";
 
-            return result;
+            return cachedPlaylist.Counts.Keys.Aggregate(result, (current, key) => current + ("\n" + key + ": " + cachedPlaylist.Counts[key]));
         }
 
         private static void _calculateBasicStats(Command command)
         {
-            var cachedPlaylist = command.Data["cachedPlaylist"] as CachedPlaylist;
-            cachedPlaylist.Counts = cachedPlaylist.GroupedTracks
-                .OrderByDescending(group => group.Count())
-                .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Count());
+            if (command.Data["cachedPlaylist"] is CachedPlaylist cachedPlaylist)
+                cachedPlaylist.Counts = cachedPlaylist.GroupedTracks
+                    .OrderByDescending(group => group.Count())
+                    .ToDictionary(group => Spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key,
+                        group => group.Count());
         }
 
         private static string _getDuration(Command command)
         {
-            var cachedPlaylist = command.Data["cachedPlaylist"] as CachedPlaylist;
+            if (!(command.Data["cachedPlaylist"] is CachedPlaylist cachedPlaylist))
+                return "Internal error while retrieving playlist";
+
             if (cachedPlaylist.Durations == null)
                 _calculateAdditionalStats(command);
 
-            var millisPerHour = 60 * 60 * 1000;
-            var millisPerMinute = 60 * 1000;
+            if (cachedPlaylist.Durations == null)
+                return "Internal error while processing playlist";
+
+            const int millisPerHour = 60 * 60 * 1000;
+            const int millisPerMinute = 60 * 1000;
             var result = "The playlist's total duration is " + cachedPlaylist.TotalDuration / millisPerHour + " hours and " + cachedPlaylist.TotalDuration % millisPerHour / millisPerMinute + " minutes.\n\nHere's who added how much:";
 
-            foreach (var pair in cachedPlaylist.Durations)
-                result += "\n" + pair.Key + ": " + pair.Value / millisPerHour + "h" + pair.Value % millisPerHour / millisPerMinute + "m";
-
-            return result;
+            return cachedPlaylist.Durations.Aggregate(result, (current, pair) => current + "\n" + pair.Key + ": " + pair.Value / millisPerHour + "h" + pair.Value % millisPerHour / millisPerMinute + "m");
         }
 
         private static string _getPopularity(Command command)
         {
-            var cachedPlaylist = command.Data["cachedPlaylist"] as CachedPlaylist;
+            if (!(command.Data["cachedPlaylist"] is CachedPlaylist cachedPlaylist))
+                return "Internal error while retrieving playlist";
+
             if (cachedPlaylist.Popularities == null)
                 _calculateAdditionalStats(command);
 
-            var result = "The playlist's average popularity score is " + cachedPlaylist.TotalPopularity.ToString("##0.00") + ".\n\nHere's who added the most popular songs:";
-            foreach (var pair in cachedPlaylist.Popularities)
-                result += "\n" + pair.Key + ": " + pair.Value.ToString("##0.00");
+            if (cachedPlaylist.Popularities == null)
+                return "Internal error while processing playlist";
 
-            return result;
+            var result = "The playlist's average popularity score is " + cachedPlaylist.TotalPopularity.ToString("##0.00") + ".\n\nHere's who added the most popular songs:";
+
+            return cachedPlaylist.Popularities.Aggregate(result, (current, pair) => current + "\n" + pair.Key + ": " + pair.Value.ToString("##0.00"));
         }
 
         private static void _calculateAdditionalStats(Command command)
         {
-            var cachedPlaylist = command.Data["cachedPlaylist"] as CachedPlaylist;
+            if (!(command.Data["cachedPlaylist"] is CachedPlaylist cachedPlaylist)) return;
+
             cachedPlaylist.Durations = cachedPlaylist.GroupedTracks
-                .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Sum(track => track.Track.DurationMs))
+                .ToDictionary(group => Spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key,
+                    group => group.Sum(track => track.Track.DurationMs))
                 .OrderByDescending(pair => pair.Value);
             cachedPlaylist.TotalDuration = cachedPlaylist.Durations.Sum(pair => pair.Value);
 
             cachedPlaylist.Popularities = cachedPlaylist.GroupedTracks
-                .ToDictionary(group => _spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key, group => group.Average(track => track.Track.Popularity))
+                .ToDictionary(group => Spotify.GetPublicProfile(group.Key).DisplayName ?? group.Key,
+                    group => group.Average(track => track.Track.Popularity))
                 .OrderByDescending(pair => pair.Value);
             cachedPlaylist.TotalPopularity = cachedPlaylist.Popularities.Average(pair => pair.Value);
         }

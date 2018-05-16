@@ -3,7 +3,7 @@
 namespace ModeratelyUsefulBot
 {
     [AttributeUsage(AttributeTargets.Method)]
-    class CommandAttribute : Attribute
+    internal class CommandAttribute : Attribute
     {
         public string Name;
         public string ShortDescription;
@@ -11,7 +11,7 @@ namespace ModeratelyUsefulBot
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    class ArgumentAttribute : Attribute
+    internal class ArgumentAttribute : Attribute
     {
         public string Name;
         public string Description;

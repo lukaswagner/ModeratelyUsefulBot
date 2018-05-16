@@ -4,22 +4,25 @@ using System.IO;
 using System.Linq;
 using Telegram.Bot.Types;
 
+// ReSharper disable UnusedMember.Global
+
 namespace ModeratelyUsefulBot
 {
-    static class MiscCommands
+    internal static class MiscCommands
     {
         [Command(Name = "Ping", ShortDescription = "test bot status", Description = "Checks if the Bot is available. Replies with the given text, or a sample text if none is specified.")]
         [Argument(Name = "Reply text", Type = typeof(string), Description = "The text which the bot will reply with.", Optional = true, DefaultValue = "pong")]
         internal static void Ping(this Command command, Message message, IEnumerable<string> arguments)
         {
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() > 0 ? String.Join(' ', arguments) : "pong");
+            var argList = arguments.ToList();
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, argList.Any() ? string.Join(' ', argList) : "pong");
         }
 
         [Command(Name = "Log", ShortDescription = "get event log", Description = "Retrieves the log file, if file logging is enabled. The log is either sent as message or as file.")]
         [Argument(Name = "Send method", Type = typeof(string), Description = "How to return the log. Available options are \"print\" (send as message) and \"file\" (send text file).", Optional = true, DefaultValue = "file")]
         internal static void GetLog(this Command command, Message message, IEnumerable<string> arguments)
         {
-            if (Log.FilePath == null || Log.FilePath == "")
+            if (string.IsNullOrEmpty(Log.FilePath))
             {
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Logging to file is disabled. Can't show current log file.");
                 return;
@@ -27,7 +30,9 @@ namespace ModeratelyUsefulBot
 
             var fileName = Log.FilePath.Split('/').Last();
             using (var fs = new FileStream(Log.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                if (arguments.Count() == 0 || arguments.First().ToLower() == "print")
+            {
+                var argList = arguments.ToList();
+                if (!argList.Any() || argList.First().ToLower() == "print")
                 {
                     const int maxLength = 4096;
                     var header = "Current log file (" + fileName.Replace("_", "\\_") + "):\n";
@@ -52,11 +57,13 @@ namespace ModeratelyUsefulBot
                             var parts = new List<List<string>> { new List<string>() };
                             var curLength = 0;
                             var curPart = parts.Last();
-                            string line;
 
                             while (!sr.EndOfStream)
                             {
-                                line = sr.ReadLine();
+                                var line = sr.ReadLine();
+                                if (line == null)
+                                    continue;
+
                                 if (curLength + curPart.Count - 1 + line.Length < remainingLength)
                                 {
                                     curLength += line.Length;
@@ -72,19 +79,20 @@ namespace ModeratelyUsefulBot
 
                             var partCount = parts.Count;
                             for (var i = 0; i < partCount; i++)
-                                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + String.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
+                                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + string.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
                         }
                     }
 
 
                 }
 
-                else if (arguments.First().ToLower() == "file")
+                else if (argList.First().ToLower() == "file")
                 {
                     command.Bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
                 }
                 else
-                    command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + arguments.First() + "\". Use \"print\" or \"file.\"");
+                    command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + argList.First() + "\". Use \"print\" or \"file.\"");
+            }
         }
 
         [Command(Name = "Log a lot", ShortDescription = "logs a lot of things", Description = "Logs a given amount of messages with a given length each. Used for debugging.")]
@@ -94,20 +102,22 @@ namespace ModeratelyUsefulBot
         {
             var logs = 1;
             var charsPerLog = 10;
-            if (arguments.Count() > 0)
-                int.TryParse(arguments.First(), out logs);
-            if (arguments.Count() > 1)
-                int.TryParse(arguments.Skip(1).First(), out charsPerLog);
+            var argList = arguments.ToList();
+            if (argList.Any())
+                int.TryParse(argList.First(), out logs);
+            if (argList.Count > 1)
+                int.TryParse(argList.Skip(1).First(), out charsPerLog);
 
-            for (int i = 0; i < logs; i++)
-                Log.Info(command.Bot.Tag, new string((char)0x262d, charsPerLog));
+            for (var i = 0; i < logs; i++)
+                Log.Info(command.Bot.TagWithName, new string((char)0x262d, charsPerLog));
         }
 
         [Command(Name = "Help", ShortDescription = "get help about available commands", Description = "Shows a list of available commands, or information about a given command.")]
         [Argument(Name = "Command", Type = typeof(string), Description = "Name of the command to get information on, with or without the leading slash.", Optional = true)]
         internal static void Help(this Command command, Message message, IEnumerable<string> arguments)
         {
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, arguments.Count() == 0 ? _getCommandList(command.Bot, message.From.Id) : _getCommandInfo(command.Bot, message.From.Id, arguments.First()));
+            var argList = arguments.ToList();
+            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, !argList.Any() ? _getCommandList(command.Bot, message.From.Id) : _getCommandInfo(command.Bot, message.From.Id, argList.First()));
         }
 
         private static string _getCommandList(Bot bot, int user)
@@ -127,15 +137,15 @@ namespace ModeratelyUsefulBot
         {
             if (!name.StartsWith('/'))
                 name = '/' + name;
-            if (!bot.Commands.TryGetValue(name, out Command command))
+            if (!bot.Commands.TryGetValue(name, out var command))
                 return "Could not find command " + name + ".";
             if (!(Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute))
                 return "No documentation available for command " + name + ".";
 
-            string result = commandAttribute.Name + " - " + commandAttribute.Description;
+            var result = commandAttribute.Name + " - " + commandAttribute.Description;
 
-            var argumentAttributes = Attribute.GetCustomAttributes(command.Action.Method, typeof(ArgumentAttribute)).Select(a => a as ArgumentAttribute).Where(a => a != null);
-            if (argumentAttributes.Count() == 0)
+            var argumentAttributes = Attribute.GetCustomAttributes(command.Action.Method, typeof(ArgumentAttribute)).Select(a => a as ArgumentAttribute).Where(a => a != null).ToList();
+            if (!argumentAttributes.Any())
                 result += "\n\nThis command takes no arguments.";
             else
             {

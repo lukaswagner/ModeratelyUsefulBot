@@ -5,15 +5,17 @@ using System.Collections.Generic;
 using System.Linq;
 using Telegram.Bot.Types;
 
+// ReSharper disable UnusedMember.Global
+
 namespace ModeratelyUsefulBot
 {
-    static class RedditCommands
+    internal static class RedditCommands
     {
-        private static string _tag = "Reddit";
-        private static Reddit _reddit;
-        private static Subreddit _dankmemes;
-        private static int _postOffset;
-        private static Random _random = new Random();
+        private const string Tag = "Reddit";
+        private static readonly Reddit Reddit;
+        private static readonly Subreddit Dankmemes;
+        private static readonly int PostOffset;
+        private static readonly Random Random = new Random();
 
         static RedditCommands()
         {
@@ -23,32 +25,33 @@ namespace ModeratelyUsefulBot
                 Config.GetDefault("reddit/auth/clientId", "", "credentials"),
                 Config.GetDefault("reddit/auth/clientSecret", "", "credentials"),
                 Config.GetDefault("reddit/auth/redirectUri", "", "credentials"));
-            _reddit = new Reddit(webAgent, false);
-            _dankmemes = _reddit.GetSubreddit("/r/dankmemes");
+            Reddit = new Reddit(webAgent, false);
+            Dankmemes = Reddit.GetSubreddit("/r/dankmemes");
             // check number of pinned posts
             var offset = 0;
-            var posts = _dankmemes.Hot.Take(3).GetEnumerator();
+            var posts = Dankmemes.Hot.Take(3).GetEnumerator();
             while (posts.MoveNext() && posts.Current.IsStickied)
                 offset++;
-            _postOffset = offset;
+            posts.Dispose();
+            PostOffset = offset;
 
-            Log.Info(_tag, "Reddit API setup done.");
+            Log.Info(Tag, "Reddit API setup done.");
         }
 
         [Command(Name = "Get random meme", ShortDescription = "get random meme", Description = "Posts a random meme from the first page of /r/dankmemes.")]
         internal static void GetRandomMeme(this Command command, Message message, IEnumerable<string> arguments)
         {
-            int offset = _random.Next(25);
-            var post = _dankmemes.Hot.Skip(_postOffset + offset).Take(1).First();
+            var offset = Random.Next(25);
+            var post = Dankmemes.Hot.Skip(PostOffset + offset).Take(1).First();
             var photo = new FileToSend(post.Url);
             command.Bot.BotClient.SendPhotoAsync(message.Chat.Id, photo, post.Title);
         }
 
         internal static void LinkTopMeme(Bot bot, ChatId chatId)
         {
-            Log.Debug(_tag, "Sending meme.");
-            var post = _dankmemes.Hot.Skip(_postOffset).Take(1).First();
-            bot.BotClient.SendTextMessageAsync(chatId, "It is " + DateTime.Now.DayOfWeek.ToString() + ", my dudes[.](" + post.Url + ")", Telegram.Bot.Types.Enums.ParseMode.Markdown);
+            Log.Debug(Tag, "Sending meme.");
+            var post = Dankmemes.Hot.Skip(PostOffset).Take(1).First();
+            bot.BotClient.SendTextMessageAsync(chatId, "It is " + DateTime.Now.DayOfWeek + ", my dudes[.](" + post.Url + ")", Telegram.Bot.Types.Enums.ParseMode.Markdown);
         }
     }
 }

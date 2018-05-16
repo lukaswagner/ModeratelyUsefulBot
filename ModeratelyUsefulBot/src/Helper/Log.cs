@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 
+// ReSharper disable UnusedMember.Global
+
 namespace ModeratelyUsefulBot
 {
     internal static class Log
@@ -15,17 +17,17 @@ namespace ModeratelyUsefulBot
 
         private class LogEntry
         {
-            internal LogLevel LogLevel;
-            internal string Tag;
-            internal string Message;
-            internal string Time;
+            internal readonly LogLevel LogLevel;
+            private readonly string _tag;
+            private readonly string _message;
+            private readonly string _time;
 
             internal LogEntry(LogLevel logLevel, string tag, string message)
             {
                 LogLevel = logLevel;
-                Tag = tag;
-                Message = message;
-                Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
+                _tag = tag;
+                _message = message;
+                _time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
             }
 
             internal void LogToConsole()
@@ -46,7 +48,7 @@ namespace ModeratelyUsefulBot
 
             private string _getLogString()
             {
-                return _getLogLevelString(LogLevel) + (LogTimes ? "[" + Time + "] " : " ") + Tag.PadRight(TagLength).Substring(0, TagLength) + " : " + Message;
+                return _getLogLevelString(LogLevel) + (LogTimes ? "[" + _time + "] " : " ") + _tag.PadRight(TagLength).Substring(0, TagLength) + " : " + _message;
             }
 
             private static string _getLogLevelString(LogLevel logLevel)
@@ -63,6 +65,8 @@ namespace ModeratelyUsefulBot
                         return "[Wrn]";
                     case LogLevel.Error:
                         return "[Err]";
+                    case LogLevel.Off:
+                        return "[Off]";
                     default:
                         return "[N/A]";
                 }
@@ -71,6 +75,7 @@ namespace ModeratelyUsefulBot
             private static bool _changeConsoleColor(LogLevel logLevel, out ConsoleColor consoleColor)
             {
                 consoleColor = ConsoleColor.White;
+                // ReSharper disable once SwitchStatementMissingSomeCases
                 switch (logLevel)
                 {
                     case LogLevel.Warn:
@@ -85,12 +90,12 @@ namespace ModeratelyUsefulBot
             }
         }
 
-        private static string _tag = "Log";
-        private static BlockingCollection<LogEntry> _queue = new BlockingCollection<LogEntry>();
-        private static Thread _logLoopThread = new Thread(_logLoop);
+        private const string Tag = "Log";
+        private static readonly BlockingCollection<LogEntry> Queue = new BlockingCollection<LogEntry>();
+        private static readonly Thread LogLoopThread = new Thread(_logLoop);
         private static bool _runLogLoop = true;
-        private static object _logLoopLock = new object();
-        private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private static readonly object LogLoopLock = new object();
+        private static readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
         private static LogLevel _consoleLevel = LogLevel.Off;
         private static LogLevel _fileLevel = LogLevel.Off;
         private static LogLevel _level = LogLevel.Off;
@@ -102,7 +107,7 @@ namespace ModeratelyUsefulBot
 
         private static void _logLoop()
         {
-            CancellationToken cancellationToken = _cancellationTokenSource.Token;
+            var cancellationToken = CancellationTokenSource.Token;
             LogEntry entry;
 
             FileStream fileStream = null;
@@ -111,9 +116,9 @@ namespace ModeratelyUsefulBot
             {
                 FilePath = "log/log_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".txt";
                 var fileInfo = new FileInfo(FilePath);
-                if (!fileInfo.Directory.Exists)
+                if (fileInfo.Directory != null && !fileInfo.Directory.Exists)
                 {
-                    System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
+                    Directory.CreateDirectory(fileInfo.DirectoryName);
                 }
                 fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
                 writer = new StreamWriter(fileStream);
@@ -123,14 +128,14 @@ namespace ModeratelyUsefulBot
             {
                 while (true)
                 {
-                    lock (_logLoopLock)
+                    lock (LogLoopLock)
                     {
                         if (!_runLogLoop)
                         {
                             return;
                         }
                     }
-                    entry = _queue.Take(cancellationToken);
+                    entry = Queue.Take(cancellationToken);
                     if (entry.LogLevel >= _consoleLevel)
                         entry.LogToConsole();
                     if (entry.LogLevel >= _fileLevel)
@@ -139,7 +144,7 @@ namespace ModeratelyUsefulBot
             }
             catch (OperationCanceledException)
             {
-                entry = new LogEntry(LogLevel.Info, _tag, "Stopped output.");
+                entry = new LogEntry(LogLevel.Info, Tag, "Stopped output.");
                 if (entry.LogLevel >= _consoleLevel)
                     entry.LogToConsole();
                 if (entry.LogLevel >= _fileLevel)
@@ -151,17 +156,18 @@ namespace ModeratelyUsefulBot
                 writer.Close();
                 writer.Dispose();
             }
-            if (fileStream != null)
-            {
-                fileStream.Close();
-                fileStream.Dispose();
-            }
+
+            if (fileStream == null)
+                return;
+
+            fileStream.Close();
+            fileStream.Dispose();
         }
 
         private static void _add(LogLevel logLevel, string tag, string message)
         {
             if (logLevel >= _level)
-                _queue.Add(new LogEntry(logLevel, tag, message));
+                Queue.Add(new LogEntry(logLevel, tag, message));
         }
 
         internal static void Enable(LogLevel consoleLevel, LogLevel fileLevel)
@@ -169,11 +175,10 @@ namespace ModeratelyUsefulBot
             _consoleLevel = consoleLevel;
             _fileLevel = fileLevel;
             _level = fileLevel < consoleLevel ? fileLevel : consoleLevel;
-            if (!_logLoopThread.IsAlive && _level < LogLevel.Off)
-            {
-                _logLoopThread.Start();
-                AppDomain.CurrentDomain.ProcessExit += _exitHandler;
-            }
+            if (LogLoopThread.IsAlive || _level >= LogLevel.Off)
+                return;
+            LogLoopThread.Start();
+            AppDomain.CurrentDomain.ProcessExit += _exitHandler;
         }
 
         internal static void Enable(string consoleLevelString, string fileLevelString = "Off")
@@ -181,7 +186,7 @@ namespace ModeratelyUsefulBot
             LogLevel consoleLevel;
             try
             {
-                consoleLevel = (LogLevel)System.Enum.Parse(typeof(LogLevel), consoleLevelString);
+                consoleLevel = (LogLevel)Enum.Parse(typeof(LogLevel), consoleLevelString);
             }
             catch (Exception ex)
             {
@@ -196,7 +201,7 @@ namespace ModeratelyUsefulBot
             LogLevel fileLevel;
             try
             {
-                fileLevel = (LogLevel)System.Enum.Parse(typeof(LogLevel), fileLevelString);
+                fileLevel = (LogLevel)Enum.Parse(typeof(LogLevel), fileLevelString);
             }
             catch (Exception ex)
             {
@@ -214,12 +219,12 @@ namespace ModeratelyUsefulBot
         internal static void Disable()
         {
             _level = LogLevel.Off;
-            lock (_logLoopLock)
+            lock (LogLoopLock)
             {
                 _runLogLoop = false;
             }
-            _cancellationTokenSource.Cancel();
-            _logLoopThread.Join();
+            CancellationTokenSource.Cancel();
+            LogLoopThread.Join();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]

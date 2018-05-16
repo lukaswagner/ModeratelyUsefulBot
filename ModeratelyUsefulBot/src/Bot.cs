@@ -7,18 +7,18 @@ using Telegram.Bot.Types;
 
 namespace ModeratelyUsefulBot
 {
-    class Bot
+    internal class Bot
     {
-        private static string _tag = "Bot";
+        private const string Tag = "Bot";
         internal TelegramBotClient BotClient;
         internal Dictionary<string, Command> Commands;
-        private List<TimedCommand> _timedCommands;
-        private Command _fallbackCommand;
+        private readonly List<TimedCommand> _timedCommands;
+        private readonly Command _fallbackCommand;
         internal List<int> Admins;
         internal string Name;
-        internal string Tag;
+        internal string TagWithName;
 
-        internal Bot(string token, List<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
+        internal Bot(string token, IEnumerable<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
         {
             BotClient = new TelegramBotClient(token);
 
@@ -30,8 +30,10 @@ namespace ModeratelyUsefulBot
                     Commands.Add(commandName, command);
                 }
 
-            _fallbackCommand = new Command(null, ((Action<Command, Message, IEnumerable<string>>)MiscCommands.SendText).Method, this);
-            _fallbackCommand.Parameters["text"] = fallbackMessage;
+            _fallbackCommand = new Command(null, ((Action<Command, Message, IEnumerable<string>>) MiscCommands.SendText).Method, this)
+            {
+                Parameters = {["text"] = fallbackMessage}
+            };
 
             _timedCommands = timedCommands;
             _timedCommands.ForEach(tc => tc.Bot = this);
@@ -39,9 +41,9 @@ namespace ModeratelyUsefulBot
             Admins = admins;
 
             Name = name;
-            Tag = name == "" ? _tag : (_tag + " (" + name + ")");
-            if (Tag.Length > Log.TagLength)
-                Tag = Tag.Substring(0, Log.TagLength);
+            TagWithName = name == "" ? Tag : Tag + " (" + name + ")";
+            if (TagWithName.Length > Log.TagLength)
+                TagWithName = TagWithName.Substring(0, Log.TagLength);
 
             BotClient.OnUpdate += _onUpdate;
 
@@ -52,19 +54,19 @@ namespace ModeratelyUsefulBot
         {
             var path = "bots/bot[" + index + "]";
 
-            bool checkArg(bool success, string message)
+            bool CheckArg(bool success, string message)
             {
                 if (!success)
-                    Log.Error(_tag, "Could not create bot with index " + index + ". " + message);
+                    Log.Error(Tag, "Could not create bot with index " + index + ". " + message);
                 return success;
             }
 
-            if (!checkArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
-            if (!checkArg(Config.Get(path + "/token", out string token, "credentials"), "No token found in config.")) return null;
+            if (!CheckArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
+            if (!CheckArg(Config.Get(path + "/token", out string token, "credentials"), "No token found in config.")) return null;
             var hasCustomFallbackMessage = Config.DoesPropertyExist(path + "/fallbackMessage");
-            string fallbackMessage = "";
+            var fallbackMessage = "";
             if (hasCustomFallbackMessage) Config.Get(path + "/fallbackMessage", out fallbackMessage);
-            string name = Config.GetDefault(path + "/name", "");
+            var name = Config.GetDefault(path + "/name", "");
 
             var admins = new List<int>();
             if (Config.DoesPropertyExist(path + "/admins"))
@@ -105,19 +107,18 @@ namespace ModeratelyUsefulBot
         private async void _check()
         {
             var me = await BotClient.GetMeAsync();
-            Log.Info(Tag, "Hello! My name is " + me.FirstName + ". I am currently " + (BotClient.IsReceiving ? "enabled." : "disabled."));
+            Log.Info(TagWithName, "Hello! My name is " + me.FirstName + ". I am currently " + (BotClient.IsReceiving ? "enabled." : "disabled."));
         }
 
         private void _onUpdate(object sender, UpdateEventArgs e)
         {
             var type = e.Update.Type;
-            if (type == Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
-            {
-                var message = e.Update.Message;
-                Log.Info(Tag, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
-                if (message.Text.StartsWith('/'))
-                    _reactToCommand(message);
-            }
+            if (type != Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
+                return;
+            var message = e.Update.Message;
+            Log.Info(TagWithName, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
+            if (message.Text.StartsWith('/'))
+                _reactToCommand(message);
         }
 
         private static string _getSenderInfo(Message message)
@@ -141,7 +142,7 @@ namespace ModeratelyUsefulBot
                     name = name.Substring(0, containsUsername);
                 var arguments = split.Skip(1);
 
-                if (!Commands.TryGetValue(name, out Command command))
+                if (!Commands.TryGetValue(name, out var command))
                     command = _fallbackCommand;
 
                 if (command.AdminOnly && !Admins.Contains(message.From.Id))
@@ -154,7 +155,7 @@ namespace ModeratelyUsefulBot
             }
             catch (Exception ex)
             {
-                Log.Error(Tag, "Error while reacting to command \"" + message.Text + "\":\n" + ex.ToString());
+                Log.Error(TagWithName, "Error while reacting to command \"" + message.Text + "\":\n" + ex);
                 BotClient.SendTextMessageAsync(message.Chat.Id, "OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
             }
         }

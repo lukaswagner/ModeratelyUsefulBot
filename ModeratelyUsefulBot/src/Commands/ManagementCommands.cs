@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Telegram.Bot.Types;
 
+// ReSharper disable UnusedMember.Global
+
 namespace ModeratelyUsefulBot
 {
-    static class ManagementCommands
+    internal static class ManagementCommands
     {
         // application management
 
@@ -24,7 +26,8 @@ namespace ModeratelyUsefulBot
         }
         private static void _exit(Bot bot, Message message, IEnumerable<string> arguments, bool requestRestart)
         {
-            if (arguments.Count() == 0 || !int.TryParse(arguments.First(), out int secondsUntilExit))
+            var argList = arguments.ToList();
+            if (!argList.Any() || !int.TryParse(argList.First(), out var secondsUntilExit))
                 secondsUntilExit = (int)((Action<int, bool>)Program.Exit).Method.GetParameters().First().DefaultValue;
 
             bot.BotClient.SendTextMessageAsync(message.Chat.Id, (requestRestart ? "Restarting" : "Shutting down") + " in " + secondsUntilExit + " seconds.");
@@ -40,22 +43,18 @@ namespace ModeratelyUsefulBot
 
             var botList = "";
 
-            void print(IEnumerable<Bot> l)
-            {
-                foreach (var b in l)
-                    botList += "\n" + b.Name + " - " + b.BotClient.GetMeAsync().GetAwaiter().GetResult().FirstName;
-            }
+            void Print(IEnumerable<Bot> l) => botList = l.Aggregate(botList, (current, b) => current + "\n" + b.Name + " - " + b.BotClient.GetMeAsync().GetAwaiter().GetResult().FirstName);
 
-            if (grouped.TryGetValue(true, out var active) && active.Count() > 0)
+            if (grouped.TryGetValue(true, out var active) && active.Any())
             {
                 botList += "\n\nActive bots:";
-                print(active);
+                Print(active);
             }
 
-            if (grouped.TryGetValue(false, out var inactive) && inactive.Count() > 0)
+            if (grouped.TryGetValue(false, out var inactive) && inactive.Any())
             {
                 botList += "\n\nInactive bots:";
-                print(inactive);
+                Print(inactive);
             }
 
             command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, botList == "" ? "No bots avaiable (But who are you talking to?)." : "These are the available bots:" + botList);
@@ -65,12 +64,13 @@ namespace ModeratelyUsefulBot
         [Argument(Name = "Bot", Type = typeof(string), Description = "The bot to be started.")]
         internal static void Start(this Command command, Message message, IEnumerable<string> arguments)
         {
-            if (arguments.Count() == 0)
+            var argList = arguments.ToList();
+            if (!argList.Any())
             {
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot name.");
                 return;
             }
-            if (!_tryGetBot(command.Bot, message, arguments.First(), out Bot target))
+            if (!_tryGetBot(command.Bot, message, argList.First(), out var target))
                 return;
             if (target.BotClient.IsReceiving)
             {
@@ -80,7 +80,7 @@ namespace ModeratelyUsefulBot
             target.BotClient.StartReceiving();
             var msg = "Started bot " + target.Name + ".";
             command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, msg);
-            Log.Info(command.Bot.Tag, msg);
+            Log.Info(command.Bot.TagWithName, msg);
         }
 
         [Command(Name = "Stop", ShortDescription = "stop a bot", Description = "Stops a bot.")]
@@ -88,14 +88,15 @@ namespace ModeratelyUsefulBot
         [Argument(Name = "Self stop allowed", Type = typeof(bool), Description = "If the bot should stop itself.", Optional = true, DefaultValue = "false")]
         internal static void Stop(this Command command, Message message, IEnumerable<string> arguments)
         {
-            if (arguments.Count() == 0)
+            var argList = arguments.ToList();
+            if (!argList.Any())
             {
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot name.");
                 return;
             }
-            if (!_tryGetBot(command.Bot, message, arguments.First(), out Bot target))
+            if (!_tryGetBot(command.Bot, message, argList.First(), out var target))
                 return;
-            if (target == command.Bot && (arguments.Count() < 2 || !bool.TryParse(arguments.Skip(1).First(), out var self) || !self))
+            if (target == command.Bot && (argList.Count < 2 || !bool.TryParse(argList.Skip(1).First(), out var self) || !self))
             {
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "If you really want the bot to stop itself, provide \"true\" as second argument.");
                 return;
@@ -108,7 +109,7 @@ namespace ModeratelyUsefulBot
             target.BotClient.StopReceiving();
             var msg = "Stopped bot " + target.Name + ".";
             command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, msg);
-            Log.Info(command.Bot.Tag, msg);
+            Log.Info(command.Bot.TagWithName, msg);
         }
 
         [Command(Name = "Set AdminOnly", ShortDescription = "set who can use a command", Description = "Configures a command to be available to all users or to admins only.")]
@@ -117,15 +118,16 @@ namespace ModeratelyUsefulBot
         [Argument(Name = "AdminOnly", Type = typeof(bool), Description = "If the command should be available to admins only (false - all users, true - admins only).")]
         internal static void SetAdminOnly(this Command command, Message message, IEnumerable<string> arguments)
         {
-            if (arguments.Count() < 3)
+            var argList = arguments as string[] ?? arguments.ToArray();
+            if (argList.Length < 3)
             {
                 command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot, a command and a boolean.");
                 return;
             }
 
-            if (!_tryGetBot(command.Bot, message, arguments.First(), out Bot target))
+            if (!_tryGetBot(command.Bot, message, argList.First(), out var target))
                 return;
-            arguments = arguments.Skip(1);
+            arguments = argList.Skip(1);
 
             if (!target.Commands.TryGetValue(arguments.First().StartsWith('/') ? arguments.First() : "/" + arguments.First(), out var cmd))
             {
@@ -145,20 +147,20 @@ namespace ModeratelyUsefulBot
 
         private static bool _tryGetBot(Bot bot, Message message, string name, out Bot target)
         {
-            var caseSensitive = Program.Bots.Where(b => b.Name == name);
-            if (caseSensitive.Count() > 0)
+            var caseSensitive = Program.Bots.Where(b => b.Name == name).ToList();
+            if (caseSensitive.Any())
             {
                 target = caseSensitive.First();
                 return true;
             }
-            var caseInsensitive = Program.Bots.Where(b => b.Name.ToLower() == name.ToLower());
-            if (caseInsensitive.Count() == 0)
+            var caseInsensitive = Program.Bots.Where(b => b.Name.ToLower() == name.ToLower()).ToList();
+            if (!caseInsensitive.Any())
             {
                 bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find a bot with the given name.");
                 target = null;
                 return false;
             }
-            if (caseInsensitive.Count() > 1)
+            if (caseInsensitive.Count > 1)
             {
                 bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Multiple bots with similar names found. Please specify the target name case sensitive.");
                 target = null;

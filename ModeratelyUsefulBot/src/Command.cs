@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -7,9 +8,9 @@ using Telegram.Bot.Types;
 
 namespace ModeratelyUsefulBot
 {
-    class Command
+    internal class Command
     {
-        private static string _tag = "Command";
+        private const string Tag = "Command";
 
         internal Action<Message, IEnumerable<string>> Action;
         internal IEnumerable<string> Names;
@@ -31,17 +32,17 @@ namespace ModeratelyUsefulBot
         {
             var path = botPath + "/commands/command[" + index + "]";
 
-            bool checkArg(bool success, string message)
+            bool CheckArg(bool success, string message)
             {
                 if (!success)
-                    Log.Error(_tag, "Could not create command with botPath " + botPath + " and index " + index + ". " + message);
+                    Log.Error(Tag, "Could not create command with botPath " + botPath + " and index " + index + ". " + message);
                 return success;
             }
 
-            if (!checkArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
-            if (!checkArg(Config.DoesPropertyExist(path + "/name") || Config.DoesPropertyExist(path + "/names"), "No name found in config.")) return null;
+            if (!CheckArg(Config.DoesPropertyExist(path), "No settings found in config.")) return null;
+            if (!CheckArg(Config.DoesPropertyExist(path + "/name") || Config.DoesPropertyExist(path + "/names"), "No name found in config.")) return null;
 
-            List<string> names = new List<string>();
+            var names = new List<string>();
             if (Config.DoesPropertyExist(path + "/name") && Config.Get(path + "/name", out string name))
                 names.Add(name);
             else
@@ -52,16 +53,17 @@ namespace ModeratelyUsefulBot
                         names.Add(name);
             }
 
-            if (!checkArg(Config.Get(path + "/action", out string actionString), "No action found in config.")) return null;
+            if (!CheckArg(Config.Get(path + "/action", out string actionString), "No action found in config.")) return null;
             var adminOnly = Config.GetDefault(path + "/adminOnly", false);
 
             var splitAction = actionString.Split('.');
-            if (!checkArg(splitAction.Length == 2, "Action should contain class and method name divided by a period.")) return null;
+            if (!CheckArg(splitAction.Length == 2, "Action should contain class and method name divided by a period.")) return null;
             var actionClass = Type.GetType("ModeratelyUsefulBot." + splitAction[0]);
-            if (!checkArg(actionClass != null, "Could not find class " + splitAction[0] + ".")) return null;
+            if (!CheckArg(actionClass != null, "Could not find class " + splitAction[0] + ".")) return null;
+            Debug.Assert(actionClass != null, nameof(actionClass) + " != null");
             RuntimeHelpers.RunClassConstructor(actionClass.TypeHandle);
             var actionMethod = actionClass.GetMethod(splitAction[1], BindingFlags.Static | BindingFlags.NonPublic);
-            if (!checkArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
+            if (!CheckArg(actionMethod != null, "Could not find method " + splitAction[1] + ".")) return null;
 
             var parameters = _parseCommandParameters(path);
 
@@ -76,19 +78,19 @@ namespace ModeratelyUsefulBot
             var result = new Dictionary<string, object>();
             var parameterIndex = 0;
 
-            bool checkArg(bool success, string message)
+            bool CheckArg(bool success, string message)
             {
                 if (!success)
-                    Log.Warn(_tag, "Could not parse command parameters for command " + commandPath + ". Problem with parameter " + parameterIndex + ": " + message);
+                    Log.Warn(Tag, "Could not parse command parameters for command " + commandPath + ". Problem with parameter " + parameterIndex + ": " + message);
                 return success;
             }
 
             string parameterPath;
             while ((parameterPath = commandPath + "/parameters/parameter[" + ++parameterIndex + "]").Length > 0 && Config.DoesPropertyExist(parameterPath))
             {
-                if (!checkArg(Config.Get(parameterPath + "/name", out string name), "Could not read parameter name. Skipping parameter.") ||
-                    !checkArg(Config.Get(parameterPath + "/type", out string type), "Could not read parameter type. Skipping parameter.") ||
-                    !checkArg(Config.Get(parameterPath + "/value", out string value), "Could not read parameter value. Skipping parameter."))
+                if (!CheckArg(Config.Get(parameterPath + "/name", out string name), "Could not read parameter name. Skipping parameter.") ||
+                    !CheckArg(Config.Get(parameterPath + "/type", out string type), "Could not read parameter type. Skipping parameter.") ||
+                    !CheckArg(Config.Get(parameterPath + "/value", out string value), "Could not read parameter value. Skipping parameter."))
                     continue;
 
                 object parsedValue;
@@ -99,20 +101,20 @@ namespace ModeratelyUsefulBot
                         break;
                     case "int":
                     case "integer":
-                        if (!checkArg(int.TryParse(value, out int intValue), "Could not parse parameter value as integer. Skipping parameter."))
+                        if (!CheckArg(int.TryParse(value, out var intValue), "Could not parse parameter value as integer. Skipping parameter."))
                             continue;
                         else
                             parsedValue = intValue;
                         break;
                     case "bool":
                     case "boolean":
-                        if (!checkArg(bool.TryParse(value, out bool boolValue), "Could not parse parameter value as boolean. Skipping parameter."))
+                        if (!CheckArg(bool.TryParse(value, out var boolValue), "Could not parse parameter value as boolean. Skipping parameter."))
                             continue;
                         else
                             parsedValue = boolValue;
                         break;
                     default:
-                        checkArg(false, "Unknown parameter type. Custom parameters should be passed as strings. Skipping parameter.");
+                        CheckArg(false, "Unknown parameter type. Custom parameters should be passed as strings. Skipping parameter.");
                         continue;
                 }
 
