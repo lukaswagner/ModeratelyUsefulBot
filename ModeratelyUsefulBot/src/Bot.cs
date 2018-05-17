@@ -6,6 +6,7 @@ using ModeratelyUsefulBot.Helper;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace ModeratelyUsefulBot
 {
@@ -117,7 +118,7 @@ namespace ModeratelyUsefulBot
         private void _onUpdate(object sender, UpdateEventArgs e)
         {
             var type = e.Update.Type;
-            if (type != Telegram.Bot.Types.Enums.UpdateType.MessageUpdate)
+            if (type != UpdateType.MessageUpdate)
                 return;
             var message = e.Update.Message;
             Log.Info(TagWithName, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
@@ -128,7 +129,7 @@ namespace ModeratelyUsefulBot
         private static string _getSenderInfo(Message message)
         {
             var result = message.From.Id + " (" + message.From.FirstName + " " + message.From.LastName + ")";
-            if (message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private)
+            if (message.Chat.Type == ChatType.Private)
                 result += " in private chat";
             else
                 result += " in group " + message.Chat.Id + " (" + message.Chat.Title + ")";
@@ -167,6 +168,28 @@ namespace ModeratelyUsefulBot
         internal void RunTimedCommands()
         {
             _timedCommands.ForEach(tc => tc.RunIfTimeUp());
+        }
+
+        public string GetCommandList(bool includeAdminCommands, bool includeLeadingSlash, bool splitMultipleNames)
+        {
+            var result = "";
+            foreach (var command in Commands.Select(c => c.Value).Where(c => !c.AdminOnly || includeAdminCommands).Distinct())
+            {
+                if (splitMultipleNames)
+                    result = command.Names.Aggregate(result, (current, name) =>
+                        current + 
+                        '\n' + 
+                        (includeLeadingSlash ? name : name.Trim('/')) + 
+                        " - " + 
+                        command.GetShortDescriptionString());
+                else
+                    result += 
+                        "\n" + 
+                        String.Join(" or ", command.Names.Select(name => includeLeadingSlash ? name : name.Trim('/'))) + 
+                        " - " + 
+                        command.GetShortDescriptionString();
+            }
+            return result;
         }
     }
 }

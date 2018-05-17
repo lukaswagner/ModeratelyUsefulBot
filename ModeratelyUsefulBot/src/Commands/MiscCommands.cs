@@ -123,36 +123,7 @@ namespace ModeratelyUsefulBot.Commands
             
             command.Say(message, argList.Any()
                 ? _getCommandInfo(command.Bot, isAdmin, argList.First())
-                : "These are the commands available to you. Use /help followed by a command for more information on it.\n" + GetCommandList(command.Bot, isAdmin, true, false));
-        }
-
-        internal static string GetCommandList(Bot bot, bool includeAdminCommands, bool includeLeadingSlash, bool splitMultipleNames)
-        {
-            var result = "";
-            foreach (var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || includeAdminCommands).Distinct())
-            {
-                if (splitMultipleNames)
-                    result = command.Names.Aggregate(result, (current, name) =>
-                        current + 
-                        '\n' + 
-                        (includeLeadingSlash ? name : name.Trim('/')) + 
-                        " - " + 
-                        _getShortDescriptionString(command));
-                else
-                    result += 
-                        "\n" + 
-                        string.Join(" or ", command.Names.Select(name => includeLeadingSlash ? name : name.Trim('/'))) + 
-                        " - " + 
-                        _getShortDescriptionString(command);
-            }
-            return result;
-        }
-
-        private static string _getShortDescriptionString(Command command)
-        {
-            return Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute
-                ? commandAttribute.ShortDescription
-                : "no description available";
+                : "These are the commands available to you. Use /help followed by a command for more information on it.\n" + command.Bot.GetCommandList(isAdmin, true, false));
         }
 
         private static string _getCommandInfo(Bot bot, bool isAdmin, string name)

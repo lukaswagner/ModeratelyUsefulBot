@@ -171,5 +171,12 @@ namespace ModeratelyUsefulBot
         {
             return Bot.BotClient.SendTextMessageAsync(invokeMessage.Chat, message, parseMode, replyToMessageId: invokeMessage.MessageId);
         }
+
+        public string GetShortDescriptionString()
+        {
+            return Attribute.GetCustomAttribute(Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute
+                ? commandAttribute.ShortDescription
+                : "no description available";
+        }
     }
 }

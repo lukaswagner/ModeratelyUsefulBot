@@ -183,7 +183,7 @@ namespace ModeratelyUsefulBot.Commands
 
             foreach (var bot in Program.Bots)
             {
-                command.Say(message, "Commands for bot @" + bot.Username + ":" + MiscCommands.GetCommandList(bot, includeAdminCommands, false, true));
+                command.Say(message, "Commands for bot @" + bot.Username + ":" + bot.GetCommandList(includeAdminCommands, false, true));
             }
         }
     }
