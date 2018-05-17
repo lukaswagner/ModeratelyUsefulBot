@@ -185,7 +185,7 @@ namespace ModeratelyUsefulBot
                 else
                     result += 
                         "\n" + 
-                        String.Join(" or ", command.Names.Select(name => includeLeadingSlash ? name : name.Trim('/'))) + 
+                        string.Join(" or ", command.Names.Select(name => includeLeadingSlash ? name : name.Trim('/'))) + 
                         " - " + 
                         command.GetShortDescriptionString();
             }

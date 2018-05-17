@@ -132,34 +132,8 @@ namespace ModeratelyUsefulBot.Commands
                 name = '/' + name;
             if (!bot.Commands.TryGetValue(name, out var command))
                 return "Could not find command " + name + ".";
-            if (!(Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute))
-                return "No documentation available for command " + name + ".";
 
-            var result = commandAttribute.Name + " - " + commandAttribute.Description;
-
-            var argumentAttributes = Attribute.GetCustomAttributes(command.Action.Method, typeof(ArgumentAttribute)).Select(a => a as ArgumentAttribute).Where(a => a != null).ToList();
-            if (!argumentAttributes.Any())
-                result += "\n\nThis command takes no arguments.";
-            else
-            {
-                result += "\n\nArguments:";
-                foreach (var argumentAttribute in argumentAttributes)
-                {
-                    result += "\n- " + argumentAttribute.Name + "\n  ";
-
-                    result +=
-                        argumentAttribute.Type == typeof(string) ? "Text" :
-                        argumentAttribute.Type == typeof(int) ? "Integer" :
-                        argumentAttribute.Type == typeof(float) ? "Decimal" :
-                        argumentAttribute.Type == typeof(bool) ? "Boolean" : "Unknown type";
-
-                    if (argumentAttribute.Optional)
-                        result += ", optional";
-                    if (argumentAttribute.DefaultValue != null)
-                        result += ", default: " + argumentAttribute.DefaultValue;
-                    result += ".\n  " + argumentAttribute.Description;
-                }
-            }
+            var result = command.Documentation;
 
             if (command.AdminOnly && !isAdmin)
                 result += "\n\nYou can't use this command, it is available to admins only.";

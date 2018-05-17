@@ -178,5 +178,32 @@ namespace ModeratelyUsefulBot
                 ? commandAttribute.ShortDescription
                 : "no description available";
         }
+
+        public string Documentation
+        {
+            get
+            {
+                if (!(Attribute.GetCustomAttribute(Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute
+                    ))
+                    return "No documentation available.";
+
+                var result = commandAttribute.Documentation;
+
+                var argumentAttributes = Attribute.GetCustomAttributes(Action.Method, typeof(ArgumentAttribute))
+                    .Select(a => a as ArgumentAttribute).Where(a => a != null).ToList();
+                if (!argumentAttributes.Any())
+                    result += "\n\nThis command takes no arguments.";
+                else
+                {
+                    result += "\n\nArguments:";
+                    foreach (var argumentAttribute in argumentAttributes)
+                    {
+                        result += "\n- " + argumentAttribute.Documentation;
+                    }
+                }
+
+                return result;
+            }
+        }
     }
 }
