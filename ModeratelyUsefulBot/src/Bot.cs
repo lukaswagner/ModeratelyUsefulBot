@@ -119,7 +119,7 @@ namespace ModeratelyUsefulBot
                 return;
             var message = e.Update.Message;
             Log.Info(TagWithName, "Received message from " + _getSenderInfo(message) + ": " + message.Text);
-            if (message.Text.StartsWith('/'))
+            if (message.Text != null && message.Text.StartsWith('/'))
                 _reactToCommand(message);
         }
 
