@@ -198,5 +198,20 @@ namespace ModeratelyUsefulBot.Commands
 
             command.Reply(message, result, ParseMode.Markdown);
         }
+
+        [Command(Name = "Quote", ShortDescription = "quotes a user", Description = "Creates a quote of a message. Provide the target message by replying to it.")]
+        internal static void Quote(this Command command, Message message, IEnumerable<string> arguments)
+        {
+            if (message.ReplyToMessage == null)
+            {
+                command.Say(message, "Please provide a target message by replying to it.");
+                return;
+            }
+
+            var target = message.ReplyToMessage;
+            var user = target.From;
+
+            command.Say(message, string.Format("\"{0}\" - {1}", target.Text, string.IsNullOrEmpty(user.LastName) ? user.FirstName : user.FirstName + " " + user.LastName));
+        }
     }
 }

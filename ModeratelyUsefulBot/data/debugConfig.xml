@@ -43,6 +43,11 @@
                     </parameters>
                 </command>
                 <command>
+                    <name>quote</name>
+                    <action>MiscCommands.Quote</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
                     <names>
                         <name>start</name>
                         <name>help</name>
