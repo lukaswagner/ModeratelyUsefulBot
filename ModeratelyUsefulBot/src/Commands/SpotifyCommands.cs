@@ -64,13 +64,13 @@ namespace ModeratelyUsefulBot.Commands
             // check for valid settings
             if (!command.Parameters.ContainsKey("playlistUser"))
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Playlist user not specified in config.");
+                command.Say(message, "Playlist user not specified in config.");
                 return;
             }
 
             if (!command.Parameters.ContainsKey("playlistId"))
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Playlist id not specified in config.");
+                command.Say(message, "Playlist id not specified in config.");
                 return;
             }
 
@@ -83,12 +83,12 @@ namespace ModeratelyUsefulBot.Commands
             if (argList.Any() && argList.First().ToLower() == "refresh")
             {
                 _loadPlaylist(command);
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Ok, I refreshed the playlist.");
+                command.Say(message, "Ok, I refreshed the playlist.");
                 return;
             }
 
             // send placeholder, get playlist and do calculations
-            var placeholderMessage = command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Crunching the latest data, just for you. Hang tight...");
+            var placeholderMessage = command.Say(message, "Crunching the latest data, just for you. Hang tight...");
 
             if (_cachedPlaylistOutdated(command))
                 _loadPlaylist(command);

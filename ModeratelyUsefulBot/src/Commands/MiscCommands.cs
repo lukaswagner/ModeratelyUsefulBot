@@ -17,7 +17,7 @@ namespace ModeratelyUsefulBot.Commands
         internal static void Ping(this Command command, Message message, IEnumerable<string> arguments)
         {
             var argList = arguments.ToList();
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, argList.Any() ? string.Join(' ', argList) : "pong");
+            command.Say(message, argList.Any() ? string.Join(' ', argList) : "pong");
         }
 
         [Command(Name = "Log", ShortDescription = "get event log", Description = "Retrieves the log file, if file logging is enabled. The log is either sent as message or as file.")]
@@ -26,7 +26,7 @@ namespace ModeratelyUsefulBot.Commands
         {
             if (string.IsNullOrEmpty(Log.FilePath))
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Logging to file is disabled. Can't show current log file.");
+                command.Say(message, "Logging to file is disabled. Can't show current log file.");
                 return;
             }
 
@@ -48,7 +48,7 @@ namespace ModeratelyUsefulBot.Commands
                     {
                         var log = sr.ReadToEnd();
                         if (log.Length < remainingLength)
-                            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + log + codeFooter, Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                            command.Say(message, header + codeHeader + log + codeFooter, Telegram.Bot.Types.Enums.ParseMode.Markdown);
                         else
                         {
                             sr.BaseStream.Position = 0;
@@ -81,7 +81,7 @@ namespace ModeratelyUsefulBot.Commands
 
                             var partCount = parts.Count;
                             for (var i = 0; i < partCount; i++)
-                                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, header + codeHeader + string.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
+                                command.Say(message, header + codeHeader + string.Join('\n', parts[i]) + codeFooter + string.Format(partText, i + 1, partCount), Telegram.Bot.Types.Enums.ParseMode.Markdown).Wait();
                         }
                     }
 
@@ -93,7 +93,7 @@ namespace ModeratelyUsefulBot.Commands
                     command.Bot.BotClient.SendDocumentAsync(message.Chat.Id, new FileToSend(fileName, fs)).Wait();
                 }
                 else
-                    command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Unknown argument \"" + argList.First() + "\". Use \"print\" or \"file.\"");
+                    command.Say(message, "Unknown argument \"" + argList.First() + "\". Use \"print\" or \"file.\"");
             }
         }
 
@@ -119,7 +119,7 @@ namespace ModeratelyUsefulBot.Commands
         internal static void Help(this Command command, Message message, IEnumerable<string> arguments)
         {
             var argList = arguments.ToList();
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, !argList.Any() ? _getCommandList(command.Bot, message.From.Id) : _getCommandInfo(command.Bot, message.From.Id, argList.First()));
+            command.Say(message, !argList.Any() ? _getCommandList(command.Bot, message.From.Id) : _getCommandInfo(command.Bot, message.From.Id, argList.First()));
         }
 
         private static string _getCommandList(Bot bot, int user)
@@ -179,7 +179,7 @@ namespace ModeratelyUsefulBot.Commands
         [Command(Name = "Send Text", ShortDescription = "send predefined text", Description = "Sends a predefined text.")]
         internal static void SendText(this Command command, Message message, IEnumerable<string> arguments)
         {
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, command.Parameters["text"] as string);
+            command.Say(message, command.Parameters["text"] as string);
         }
 
         [Command(Name = "Mention", ShortDescription = "mentions users", Description = "")]
@@ -196,7 +196,7 @@ namespace ModeratelyUsefulBot.Commands
             else
                 result = "No users specified.";
 
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, result, ParseMode.Markdown);
+            command.Reply(message, result, ParseMode.Markdown);
         }
     }
 }

@@ -58,7 +58,7 @@ namespace ModeratelyUsefulBot.Commands
                 Print(inactive);
             }
 
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, botList == "" ? "No bots avaiable (But who are you talking to?)." : "These are the available bots:" + botList);
+            command.Say(message, botList == "" ? "No bots avaiable (But who are you talking to?)." : "These are the available bots:" + botList);
         }
 
         [Command(Name = "Start", ShortDescription = "start a bot", Description = "Starts a bot.")]
@@ -68,19 +68,19 @@ namespace ModeratelyUsefulBot.Commands
             var argList = arguments.ToList();
             if (!argList.Any())
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot name.");
+                command.Say(message, "Please provide a bot name.");
                 return;
             }
-            if (!_tryGetBot(command.Bot, message, argList.First(), out var target))
+            if (!_tryGetBot(command, message, argList.First(), out var target))
                 return;
             if (target.BotClient.IsReceiving)
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "The target bot is already started.");
+                command.Say(message, "The target bot is already started.");
                 return;
             }
             target.BotClient.StartReceiving();
             var msg = "Started bot " + target.Name + ".";
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, msg);
+            command.Say(message, msg);
             Log.Info(command.Bot.TagWithName, msg);
         }
 
@@ -92,24 +92,24 @@ namespace ModeratelyUsefulBot.Commands
             var argList = arguments.ToList();
             if (!argList.Any())
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot name.");
+                command.Say(message, "Please provide a bot name.");
                 return;
             }
-            if (!_tryGetBot(command.Bot, message, argList.First(), out var target))
+            if (!_tryGetBot(command, message, argList.First(), out var target))
                 return;
             if (target == command.Bot && (argList.Count < 2 || !bool.TryParse(argList.Skip(1).First(), out var self) || !self))
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "If you really want the bot to stop itself, provide \"true\" as second argument.");
+                command.Say(message, "If you really want the bot to stop itself, provide \"true\" as second argument.");
                 return;
             }
             if (!target.BotClient.IsReceiving)
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "The target bot is already stopped.");
+                command.Say(message, "The target bot is already stopped.");
                 return;
             }
             target.BotClient.StopReceiving();
             var msg = "Stopped bot " + target.Name + ".";
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, msg);
+            command.Say(message, msg);
             Log.Info(command.Bot.TagWithName, msg);
         }
 
@@ -122,31 +122,31 @@ namespace ModeratelyUsefulBot.Commands
             var argList = arguments as string[] ?? arguments.ToArray();
             if (argList.Length < 3)
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Please provide a bot, a command and a boolean.");
+                command.Say(message, "Please provide a bot, a command and a boolean.");
                 return;
             }
 
-            if (!_tryGetBot(command.Bot, message, argList.First(), out var target))
+            if (!_tryGetBot(command, message, argList.First(), out var target))
                 return;
             arguments = argList.Skip(1);
 
             if (!target.Commands.TryGetValue(arguments.First().StartsWith('/') ? arguments.First() : "/" + arguments.First(), out var cmd))
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find command.");
+                command.Say(message, "Could not find command.");
                 return;
             }
             arguments = arguments.Skip(1);
 
             if (!bool.TryParse(arguments.First(), out var adminOnly))
             {
-                command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not parse boolean.");
+                command.Say(message, "Could not parse boolean.");
                 return;
             }
             cmd.AdminOnly = adminOnly;
-            command.Bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Command " + string.Join(" aka ", cmd.Names) + " of bot " + target.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
+            command.Say(message, "Command " + string.Join(" aka ", cmd.Names) + " of bot " + target.Name + " is now available " + (adminOnly ? "to admins only." : "to everyone."));
         }
 
-        private static bool _tryGetBot(Bot bot, Message message, string name, out Bot target)
+        private static bool _tryGetBot(Command command, Message message, string name, out Bot target)
         {
             var caseSensitive = Program.Bots.Where(b => b.Name == name).ToList();
             if (caseSensitive.Any())
@@ -157,13 +157,13 @@ namespace ModeratelyUsefulBot.Commands
             var caseInsensitive = Program.Bots.Where(b => b.Name.ToLower() == name.ToLower()).ToList();
             if (!caseInsensitive.Any())
             {
-                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Could not find a bot with the given name.");
+                command.Say(message, "Could not find a bot with the given name.");
                 target = null;
                 return false;
             }
             if (caseInsensitive.Count > 1)
             {
-                bot.BotClient.SendTextMessageAsync(message.Chat.Id, "Multiple bots with similar names found. Please specify the target name case sensitive.");
+                command.Say(message, "Multiple bots with similar names found. Please specify the target name case sensitive.");
                 target = null;
                 return false;
             }

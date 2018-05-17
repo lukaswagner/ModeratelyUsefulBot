@@ -4,8 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using ModeratelyUsefulBot.Helper;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace ModeratelyUsefulBot
 {
@@ -158,6 +160,16 @@ namespace ModeratelyUsefulBot
                 return;
 
             Action.Invoke(message, arguments);
+        }
+
+        internal Task<Message> Say(Message invokeMessage, string message, ParseMode parseMode = ParseMode.Default)
+        {
+            return Bot.BotClient.SendTextMessageAsync(invokeMessage.Chat, message, parseMode);
+        }
+
+        internal Task<Message> Reply(Message invokeMessage, string message, ParseMode parseMode = ParseMode.Default)
+        {
+            return Bot.BotClient.SendTextMessageAsync(invokeMessage.Chat, message, parseMode, replyToMessageId: invokeMessage.MessageId);
         }
     }
 }
