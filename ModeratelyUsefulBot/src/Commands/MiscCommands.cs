@@ -182,7 +182,7 @@ namespace ModeratelyUsefulBot.Commands
             command.Say(message, command.Parameters["text"] as string);
         }
 
-        [Command(Name = "Mention", ShortDescription = "mentions users", Description = "")]
+        [Command(Name = "Mention", ShortDescription = "mentions users", Description = "Replies to the message, mentioning a given list of users.")]
         internal static void Mention(this Command command, Message message, IEnumerable<string> arguments)
         {
             var result = "";
