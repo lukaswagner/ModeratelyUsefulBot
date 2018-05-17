@@ -170,5 +170,21 @@ namespace ModeratelyUsefulBot.Commands
             target = caseInsensitive.First();
             return true;
         }
+
+        [Command(Name = "Commands Markup", ShortDescription = "get command markup for all bots", Description = "Creates a list of available commands of all bots, formatted to be sent to the Botfather.")]
+        [Argument(Name = "Include admin commands", Type = typeof(bool), Description = "If admin commands should be included in the list.", Optional = true, DefaultValue = "false")]
+        internal static void CommandMarkupAllBots(this Command command, Message message, IEnumerable<string> arguments)
+        {
+            var includeAdminCommands = false;
+
+            var argList = arguments.ToList();
+            if (argList.Any())
+                bool.TryParse(argList.First().ToLower(), out includeAdminCommands);
+
+            foreach (var bot in Program.Bots)
+            {
+                command.Say(message, "Commands for bot @" + bot.Username + ":" + MiscCommands.GetCommandList(bot, includeAdminCommands, false, true));
+            }
+        }
     }
 }

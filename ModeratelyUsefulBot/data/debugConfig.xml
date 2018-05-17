@@ -118,6 +118,11 @@
                     <action>ManagementCommands.SetAdminOnly</action>
                     <adminOnly>true</adminOnly>
                 </command>
+                <command>
+                    <name>markup</name>
+                    <action>ManagementCommands.CommandMarkupAllBots</action>
+                    <adminOnly>true</adminOnly>
+                </command>
             </commands>
             <admins>
                 <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->

@@ -18,6 +18,7 @@ namespace ModeratelyUsefulBot
         private readonly Command _fallbackCommand;
         internal List<int> Admins;
         internal string Name;
+        internal string Username;
         internal string TagWithName;
 
         internal Bot(string token, IEnumerable<Command> commands, List<TimedCommand> timedCommands, List<int> admins, string name = "", string fallbackMessage = "Sorry, but I don't know how to do that.")
@@ -109,6 +110,7 @@ namespace ModeratelyUsefulBot
         private async void _check()
         {
             var me = await BotClient.GetMeAsync();
+            Username = me.Username;
             Log.Info(TagWithName, "Hello! My name is " + me.FirstName + ". I am currently " + (BotClient.IsReceiving ? "enabled." : "disabled."));
         }
 

@@ -119,23 +119,43 @@ namespace ModeratelyUsefulBot.Commands
         internal static void Help(this Command command, Message message, IEnumerable<string> arguments)
         {
             var argList = arguments.ToList();
-            command.Say(message, !argList.Any() ? _getCommandList(command.Bot, message.From.Id) : _getCommandInfo(command.Bot, message.From.Id, argList.First()));
+            var isAdmin = command.Bot.Admins.Contains(message.From.Id);
+            
+            command.Say(message, argList.Any()
+                ? _getCommandInfo(command.Bot, isAdmin, argList.First())
+                : "These are the commands available to you. Use /help followed by a command for more information on it.\n" + GetCommandList(command.Bot, isAdmin, true, false));
         }
 
-        private static string _getCommandList(Bot bot, int user)
+        internal static string GetCommandList(Bot bot, bool includeAdminCommands, bool includeLeadingSlash, bool splitMultipleNames)
         {
-            var isAdmin = bot.Admins.Contains(user);
-            var result = "These are the commands available to you. Use /help followed by a command for more information on it.\n";
-            foreach (var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || isAdmin).Distinct())
+            var result = "";
+            foreach (var command in bot.Commands.Select(c => c.Value).Where(c => !c.AdminOnly || includeAdminCommands).Distinct())
             {
-                result += "\n" + string.Join(" or ", command.Names);
-                if (Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute)
-                    result += " - " + commandAttribute.ShortDescription;
+                if (splitMultipleNames)
+                    result = command.Names.Aggregate(result, (current, name) =>
+                        current + 
+                        '\n' + 
+                        (includeLeadingSlash ? name : name.Trim('/')) + 
+                        " - " + 
+                        _getShortDescriptionString(command));
+                else
+                    result += 
+                        "\n" + 
+                        string.Join(" or ", command.Names.Select(name => includeLeadingSlash ? name : name.Trim('/'))) + 
+                        " - " + 
+                        _getShortDescriptionString(command);
             }
             return result;
         }
 
-        private static string _getCommandInfo(Bot bot, int user, string name)
+        private static string _getShortDescriptionString(Command command)
+        {
+            return Attribute.GetCustomAttribute(command.Action.Method, typeof(CommandAttribute)) is CommandAttribute commandAttribute
+                ? commandAttribute.ShortDescription
+                : "no description available";
+        }
+
+        private static string _getCommandInfo(Bot bot, bool isAdmin, string name)
         {
             if (!name.StartsWith('/'))
                 name = '/' + name;
@@ -170,7 +190,7 @@ namespace ModeratelyUsefulBot.Commands
                 }
             }
 
-            if (command.AdminOnly && !bot.Admins.Contains(user))
+            if (command.AdminOnly && !isAdmin)
                 result += "\n\nYou can't use this command, it is available to admins only.";
 
             return result;
