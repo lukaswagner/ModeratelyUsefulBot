@@ -25,6 +25,7 @@ namespace ModeratelyUsefulBot.Commands
         {
             _exit(command.Bot, message, arguments, true);
         }
+
         private static void _exit(Bot bot, Message message, IEnumerable<string> arguments, bool requestRestart)
         {
             var argList = arguments.ToList();
