@@ -4,50 +4,41 @@
         <!-- Moderately Useful Bot -->
         <bot>
             <name>ModUsef</name>
+            <autostart>true</autostart>
             <fallbackMessage>Sorry, but I don't know how to do that. I'm just moderately useful, after all.</fallbackMessage>
             <commands>
-                <command>
-                    <name>ping</name>
-                    <action>MiscCommands.Ping</action>
-                    <adminOnly>false</adminOnly>
-                </command>
-                <command>
-                    <name>playlist</name>
-                    <action>SpotifyCommands.SendPlaylistStats</action>
-                    <adminOnly>false</adminOnly>
-                </command>
                 <command>
                     <name>meme</name>
                     <action>RedditCommands.GetRandomMeme</action>
                     <adminOnly>true</adminOnly>
                 </command>
                 <command>
-                    <name>log</name>
-                    <action>MiscCommands.GetLog</action>
-                    <adminOnly>true</adminOnly>
+                    <name>playlist</name>
+                    <action>SpotifyCommands.SendPlaylistStats</action>
+                    <adminOnly>false</adminOnly>
+                    <parameters>
+                        <parameter>
+                            <name>playlistUser</name>
+                            <type>string</type>
+                            <value>1155295024</value>
+                        </parameter>
+                        <parameter>
+                            <name>playlistId</name>
+                            <type>string</type>
+                            <value>4rn5S00IB3kTbgtO1GSzD8</value>
+                        </parameter>
+                    </parameters>
                 </command>
                 <command>
-                    <name>exit</name>
-                    <action>MiscCommands.Exit</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-                <command>
-                    <name>restart</name>
-                    <action>MiscCommands.Restart</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-                <command>
-                    <name>adminonly</name>
-                    <action>MiscCommands.SetAdminOnly</action>
-                    <adminOnly>true</adminOnly>
-                </command>
-                <command>
-                    <name>start</name>
-                    <action>MiscCommands.Help</action>
+                    <name>quote</name>
+                    <action>MiscCommands.Quote</action>
                     <adminOnly>false</adminOnly>
                 </command>
                 <command>
-                    <name>help</name>
+                    <names>
+                        <name>start</name>
+                        <name>help</name>
+                    </names>
                     <action>MiscCommands.Help</action>
                     <adminOnly>false</adminOnly>
                 </command>
@@ -57,14 +48,70 @@
                 <admin>168587717</admin>
             </admins>
         </bot>
+        <!-- Bot Management Bot-->
+        <bot>
+            <name>Mngmnt</name>
+            <autostart>true</autostart>
+            <commands>
+                <!-- basic commands -->
+                <command>
+                    <name>ping</name>
+                    <action>MiscCommands.Ping</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>help</name>
+                    <action>MiscCommands.Help</action>
+                    <adminOnly>false</adminOnly>
+                </command>
+                <command>
+                    <name>log</name>
+                    <action>MiscCommands.GetLog</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <!-- management commands -->
+                <command>
+                    <name>exit</name>
+                    <action>ManagementCommands.Exit</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>restart</name>
+                    <action>ManagementCommands.Restart</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>botlist</name>
+                    <action>ManagementCommands.BotList</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>start</name>
+                    <action>ManagementCommands.Start</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>stop</name>
+                    <action>ManagementCommands.Stop</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>adminonly</name>
+                    <action>ManagementCommands.SetAdminOnly</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+                <command>
+                    <name>markup</name>
+                    <action>ManagementCommands.CommandMarkupAllBots</action>
+                    <adminOnly>true</adminOnly>
+                </command>
+            </commands>
+            <admins>
+                <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->
+                <admin>168587717</admin>
+            </admins>
+        </bot>
     </bots>
-    <spotify>
-        <!-- example shared playlist -->
-        <playlist>
-            <user>1155295024</user>
-            <id>4rn5S00IB3kTbgtO1GSzD8</id>
-        </playlist>
-    </spotify>
     <log>
         <consoleLevel>Info</consoleLevel>
         <fileLevel>Info</fileLevel>
