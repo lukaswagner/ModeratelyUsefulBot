@@ -29,6 +29,7 @@
             <xs:element name="autostart" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
             <xs:element name="fallbackMessage" type="xs:string" minOccurs="0" maxOccurs="1"/>
             <xs:element name="commands" type="cnf:commands"/>
+            <xs:element name="timedCommands" type="cnf:timedCommands" minOccurs="0" maxOccurs="1"/>
             <xs:element minOccurs="0" name="admins" type="cnf:admins"/>
         </xs:sequence>
     </xs:complexType>
@@ -50,6 +51,21 @@
             <xs:element name="action" type="xs:string" />
             <xs:element name="adminOnly" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
             <xs:element name="parameters" type="cnf:parameters" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="timedCommands">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" name="timedCommand" type="cnf:timedCommand"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="timedCommand">
+        <xs:sequence>
+            <xs:element name="action" type="xs:string" />
+            <xs:element name="start" type="xs:dateTime" />
+            <xs:element name="timeSpan" type="xs:string" />
+            <xs:element name="chatId" type="xs:string" />
         </xs:sequence>
     </xs:complexType>
 
