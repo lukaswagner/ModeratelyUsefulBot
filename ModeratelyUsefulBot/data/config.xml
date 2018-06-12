@@ -43,6 +43,14 @@
                     <adminOnly>false</adminOnly>
                 </command>
             </commands>
+            <timedCommands>
+                <timedCommand>
+                    <action>RedditCommands.LinkTopMeme</action>
+                    <start>2018-06-12T16:20:00</start>
+                    <timeSpan>1.00:00</timeSpan>
+                    <chatId>-314574467</chatId>
+                </timedCommand>
+            </timedCommands>
             <admins>
                 <!-- edit this if you're running the bot, otherwise I'm your admin :^) -->
                 <admin>168587717</admin>
